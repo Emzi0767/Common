@@ -1,0 +1,65 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 15
+VisualStudioVersion = 15.0.28307.271
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Emzi0767.Common", "src\Emzi0767.Common\Emzi0767.Common.csproj", "{C925E3DE-C33A-400C-8393-433E886EC682}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{DC864C47-8C2F-4FB8-BEBF-E6D59EF2C329}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{07E961A7-D26E-48B3-AD4A-50430FF09C5E}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "build", "build", "{70609DD1-3791-45CC-9F49-59A5B4C29347}"
+	ProjectSection(SolutionItems) = preProject
+		appveyor.yml = appveyor.yml
+		build\oneclick-rebuild.ps1 = build\oneclick-rebuild.ps1
+		build\rebuild-all.ps1 = build\rebuild-all.ps1
+		build\rebuild-lib.ps1 = build\rebuild-lib.ps1
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "meta", "meta", "{C8EDF7DC-EEAA-41C9-9BBA-A437DAD332D7}"
+	ProjectSection(SolutionItems) = preProject
+		LICENSE.TXT = LICENSE.TXT
+		NOTICE.TXT = NOTICE.TXT
+		README.MD = README.MD
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "github", "github", "{680D4FD8-4F30-4E8A-B824-83C075587704}"
+	ProjectSection(SolutionItems) = preProject
+		.github\ISSUE_TEMPLATE\BUG_REPORT.MD = .github\ISSUE_TEMPLATE\BUG_REPORT.MD
+		.github\CODE_OF_CONDUCT.MD = .github\CODE_OF_CONDUCT.MD
+		.github\CONTIRUBTING.MD = .github\CONTIRUBTING.MD
+		.github\ISSUE_TEMPLATE\FEATURE_REQUEST.MD = .github\ISSUE_TEMPLATE\FEATURE_REQUEST.MD
+		.github\PULL_REQUEST_TEMPLATE.MD = .github\PULL_REQUEST_TEMPLATE.MD
+		.github\SUPPORT.MD = .github\SUPPORT.MD
+	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Emzi0767.Common.Tests", "tests\Emzi0767.Common.Tests\Emzi0767.Common.Tests.csproj", "{88F13AC5-55C3-4672-A3ED-545802948F1D}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{C925E3DE-C33A-400C-8393-433E886EC682}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C925E3DE-C33A-400C-8393-433E886EC682}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C925E3DE-C33A-400C-8393-433E886EC682}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C925E3DE-C33A-400C-8393-433E886EC682}.Release|Any CPU.Build.0 = Release|Any CPU
+		{88F13AC5-55C3-4672-A3ED-545802948F1D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{88F13AC5-55C3-4672-A3ED-545802948F1D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{88F13AC5-55C3-4672-A3ED-545802948F1D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{88F13AC5-55C3-4672-A3ED-545802948F1D}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{C925E3DE-C33A-400C-8393-433E886EC682} = {DC864C47-8C2F-4FB8-BEBF-E6D59EF2C329}
+		{680D4FD8-4F30-4E8A-B824-83C075587704} = {C8EDF7DC-EEAA-41C9-9BBA-A437DAD332D7}
+		{88F13AC5-55C3-4672-A3ED-545802948F1D} = {07E961A7-D26E-48B3-AD4A-50430FF09C5E}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {C910970C-7341-4D24-B6F0-8B96578BB00C}
+	EndGlobalSection
+EndGlobal

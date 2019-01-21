@@ -1,0 +1,34 @@
+version: 1.0.0-nightly-{build}
+pull_requests:
+  do_not_increment_build_number: true
+branches:
+  only:
+  - master
+skip_tags: true
+max_jobs: 1
+image: Visual Studio 2017
+clone_depth: 1
+build_script:
+- ps: |-
+    # Version number
+    $BUILD_NUMBER = [int]$Env:APPVEYOR_BUILD_NUMBER
+    $BUILD_SUFFIX = "nightly"
+
+    # Branch
+    $BRANCH = "$Env:APPVEYOR_REPO_BRANCH"
+    $Env:DOCFX_SOURCE_BRANCH_NAME = "$BRANCH"
+
+    # Output directory
+    $Env:ARTIFACT_DIR = ".\artifacts"
+    $dir = New-Item -type directory $env:ARTIFACT_DIR
+    $dir = $dir.FullName
+
+    # Verbosity
+    Write-Host "Build: $BUILD_NUMBER / Branch: $BRANCH"
+    Write-Host "Artifacts will be placed in: $dir"
+
+    # Build
+    Write-Host "Building from PR ($Env:APPVEYOR_PULL_REQUEST_NUMBER); skipping docs build"
+    & .\build\rebuild-all.ps1 -ArtifactLocation "$dir" -Configuration "Release" -VersionSuffix "$BUILD_SUFFIX" -BuildNumber $BUILD_NUMBER 
+artifacts:
+- path: artifacts\*.nupkg
