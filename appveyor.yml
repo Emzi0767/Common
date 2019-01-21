@@ -32,3 +32,17 @@ build_script:
     & .\build\rebuild-all.ps1 -ArtifactLocation "$dir" -Configuration "Release" -VersionSuffix "$BUILD_SUFFIX" -BuildNumber $BUILD_NUMBER 
 artifacts:
 - path: artifacts\*.nupkg
+deploy:
+- provider: NuGet
+  server: https://www.myget.org/F/emzi0767-nightly/api/v2/package
+  api_key:
+    secure: k0YIk0KMqE3V0avtHJSx6iA2ay3Pw1lwJf7kGLqrZQ/5dLFvv2oNzyG1572hf/VT
+  symbol_server: https://www.myget.org/F/emzi0767-nightly/symbols/api/v2/package
+notifications:
+- provider: Slack
+  incoming_webhook: 
+    secure: z4bpoeWztbUGxF4yxdUMUjU9XFR2JNtrCdCmiG7Ri7yYb1pprTQgAU22LPGhbPxegYMPL5/YZa+PhuxQuCbN9pY7VKlszvnoBCml8UsyV+qv9PasFgsk2VQikylsuX3oynCcNrt9zNfRfpGJeDWOTA1QN0hu2OZTyuxuwOz3tES6woj8W5c8Wb4Ae6+sb+vE
+  channel: gitfeed
+  on_build_success: true
+  on_build_failure: true
+  on_build_status_changed: false

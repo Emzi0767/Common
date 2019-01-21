@@ -1,4 +1,9 @@
 # Emzi's Common Code
+
+[![AppVeyor build status][4]][3]
+[![NuGet][6]][5]
+[![MyGet][8]][7]
+
 This library is a collection of reusable components I use across my various projects. While contributions are not 
 unwelcome, you will need to provide me with a solid reason as to why your code should be included.
 
@@ -18,3 +23,9 @@ If you need more information, just browse the source.
 
 [1]: https://nuget.org/packages/Emzi0767.Common
 [2]: https://www.myget.org/gallery/emzi0767-nightly
+[3]: https://ci.appveyor.com/project/Emzi0767/common
+[4]: https://img.shields.io/appveyor/ci/Emzi0767/common.svg?style=for-the-badge
+[5]: https://nuget.org/packages/Emzi0767.Common
+[6]: https://img.shields.io/nuget/v/Emzi0767.Common.svg?style=for-the-badge&label=NuGet
+[7]: https://www.myget.org/gallery/emzi0767-nightly
+[8]: https://img.shields.io/myget/emzi0767-nightly/vpre/Emzi0767.Common.svg?style=for-the-badge&label=MyGet
