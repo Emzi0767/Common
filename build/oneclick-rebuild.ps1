@@ -44,6 +44,7 @@ $suffix = ""
 $build_number = -1
 
 # --------- Execute build ---------
+Set-Location ..
 & .\build\rebuild-all.ps1 -ArtifactLocation "$target" -Configuration "Release" -VersionSuffix "$suffix" -BuildNumber $build_number | Out-Host
 if ($LastExitCode -ne 0)
 {
