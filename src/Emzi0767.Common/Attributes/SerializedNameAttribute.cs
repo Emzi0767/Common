@@ -16,7 +16,7 @@
 
 using System;
 
-namespace Emzi0767.Attributes
+namespace System.Runtime.Serialization
 {
     /// <summary>
     /// Declares name of a property in serialized data. This is used for mapping serialized data to object properties and fields.
