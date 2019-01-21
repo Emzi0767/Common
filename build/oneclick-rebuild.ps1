@@ -34,7 +34,7 @@
 # ------------ Defaults -----------
 
 # Output path for bots binaries and documentation.
-$target = "..\artifacts"
+$target = ".\artifacts"
 
 # Version suffix data. Default is none. General format is 5-digit number.
 # The version will be formatted as such: $version-$suffix-$build_number
