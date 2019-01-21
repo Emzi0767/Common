@@ -21,7 +21,7 @@ namespace System.Runtime.Serialization
     /// <summary>
     /// Declares name of a property in serialized data. This is used for mapping serialized data to object properties and fields.
     /// </summary>
-    [AttributeUsage(AttributeTargets.Property | AttributeTargets.Field)]
+    [AttributeUsage(AttributeTargets.Property | AttributeTargets.Field, AllowMultiple = false, Inherited = true)]
     public sealed class SerializedNameAttribute : Attribute
     {
         /// <summary>

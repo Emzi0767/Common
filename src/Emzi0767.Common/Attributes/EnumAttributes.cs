@@ -22,7 +22,7 @@ namespace System.Runtime.Serialization
     /// <para>Specifies that this enum should be serialized and deserialized as its underlying numeric type.</para>
     /// <para>This is used to change the behaviour of enum serialization.</para>
     /// </summary>
-    [AttributeUsage(AttributeTargets.Property | AttributeTargets.Field)]
+    [AttributeUsage(AttributeTargets.Property | AttributeTargets.Field, AllowMultiple = false, Inherited = true)]
     public sealed class NumericEnumAttribute : Attribute
     { }
 
@@ -30,7 +30,7 @@ namespace System.Runtime.Serialization
     /// <para>Specifies that this enum should be serialized and deserialized as its string representation.</para>
     /// <para>This is used to change the behaviour of enum serialization.</para>
     /// </summary>
-    [AttributeUsage(AttributeTargets.Property | AttributeTargets.Field)]
+    [AttributeUsage(AttributeTargets.Property | AttributeTargets.Field, AllowMultiple = false, Inherited = true)]
     public sealed class StringEnumAttribute : Attribute
     { }
 }

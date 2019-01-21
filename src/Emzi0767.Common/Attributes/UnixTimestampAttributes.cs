@@ -14,13 +14,23 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-namespace System.Runtime.Serialization
+using System;
+
+namespace Emzi0767.Attributes
 {
     /// <summary>
-    /// <para>Specifies that if the value of the field or property is null, it should be included in the serialized data.</para>
-    /// <para>This alters the default behaviour of ignoring nulls.</para>
+    /// <para>Specifies that this <see cref="DateTime"/> or <see cref="DateTimeOffset"/> will be serialized as Unix timestamp seconds.</para>
+    /// <para>This value will always be serialized as a number.</para>
     /// </summary>
     [AttributeUsage(AttributeTargets.Property | AttributeTargets.Field, AllowMultiple = false, Inherited = true)]
-    public sealed class IncludeNullAttribute : Attribute
+    public sealed class UnixSecondsAttribute : Attribute
+    { }
+
+    /// <summary>
+    /// <para>Specifies that this <see cref="DateTime"/> or <see cref="DateTimeOffset"/> will be serialized as Unix timestamp milliseconds.</para>
+    /// <para>This value will always be serialized as a number.</para>
+    /// </summary>
+    [AttributeUsage(AttributeTargets.Property | AttributeTargets.Field, AllowMultiple = false, Inherited = true)]
+    public sealed class UnixMillisecondsAttribute : Attribute
     { }
 }
