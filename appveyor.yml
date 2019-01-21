@@ -28,7 +28,6 @@ build_script:
     Write-Host "Artifacts will be placed in: $dir"
 
     # Build
-    Write-Host "Building from PR ($Env:APPVEYOR_PULL_REQUEST_NUMBER); skipping docs build"
     & .\build\rebuild-all.ps1 -ArtifactLocation "$dir" -Configuration "Release" -VersionSuffix "$BUILD_SUFFIX" -BuildNumber $BUILD_NUMBER 
 artifacts:
 - path: artifacts\*.nupkg
