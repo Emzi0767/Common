@@ -19,10 +19,18 @@ using System;
 namespace System.Runtime.Serialization
 {
     /// <summary>
-    /// <para>Specifies that this 64-bit integer uses no more than 53 bits to represent its value.</para>
-    /// <para>This is used to indicate that large numbers are safe for direct serialization into formats which do support 64-bit integers natively (such as JSON).</para>
+    /// <para>Specifies that this enum should be serialized and deserialized as its underlying numeric type.</para>
+    /// <para>This is used to change the behaviour of enum serialization.</para>
     /// </summary>
     [AttributeUsage(AttributeTargets.Property | AttributeTargets.Field)]
-    public sealed class Int53Attribute : Attribute
+    public sealed class NumericEnumAttribute : Attribute
+    { }
+
+    /// <summary>
+    /// <para>Specifies that this enum should be serialized and deserialized as its string representation.</para>
+    /// <para>This is used to change the behaviour of enum serialization.</para>
+    /// </summary>
+    [AttributeUsage(AttributeTargets.Property | AttributeTargets.Field)]
+    public sealed class StringEnumAttribute : Attribute
     { }
 }
