@@ -22,7 +22,7 @@
   <PropertyGroup>
     <AssemblyName>Emzi0767.Common</AssemblyName>
     <RootNamespace>Emzi0767</RootNamespace>
-    <VersionPrefix>1.2.0</VersionPrefix>
+    <VersionPrefix>1.3.0</VersionPrefix>
     <LangVersion>7.3</LangVersion>
     <Optimize>True</Optimize>
     <GenerateDocumentationFile>True</GenerateDocumentationFile>
