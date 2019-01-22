@@ -39,12 +39,17 @@ namespace Emzi0767.Common.Tests
         private string String69 { get; } = "69";
         private string StringNull { get; } = null;
 
+        private Optional<Nullable<int>> OptionalNullableInt_0 { get; } = Optional.FromValue<Nullable<int>>(null);
+        private Optional<Nullable<int>> OptionalNullableInt_1 { get; } = Optional.FromValue<Nullable<int>>(null);
+        private Nullable<int> NullableInt { get; } = null;
+
         [TestMethod]
         public void TestOptionalEquality()
         {
             // Test that optionals with similar values are equal
             Assert.IsTrue(this.Optional42_0 == this.Optional42_1);
             Assert.IsTrue(this.Optional42_1 == this.Optional42_0);
+            Assert.IsTrue(this.OptionalNullableInt_0 == this.OptionalNullableInt_1);
 
             // Test that optionals with different values are not equal
             Assert.IsFalse(this.Optional42_0 == this.Optional69);
@@ -86,6 +91,9 @@ namespace Emzi0767.Common.Tests
 
             Assert.IsTrue(this.OptionalString42 == this.String42);
 
+            Assert.IsTrue(this.OptionalNullableInt_0 == this.NullableInt);
+            Assert.IsTrue(this.OptionalNullableInt_1 == this.NullableInt);
+
             // Test that optionals are not equal to other values
             Assert.IsFalse(this.Optional42_0 == this.Int69);
             Assert.IsFalse(this.Optional42_0 == this.Int0);
@@ -101,6 +109,14 @@ namespace Emzi0767.Common.Tests
 
             Assert.IsFalse(this.OptionalString42 == this.String69);
             Assert.IsFalse(this.OptionalDefaultString == this.String69);
+
+            Assert.IsFalse(this.OptionalNullableInt_0 == this.Int42);
+            Assert.IsFalse(this.OptionalNullableInt_0 == this.Int69);
+            Assert.IsFalse(this.OptionalNullableInt_0 == this.Int0);
+
+            Assert.IsFalse(this.OptionalNullableInt_1 == this.Int42);
+            Assert.IsFalse(this.OptionalNullableInt_1 == this.Int69);
+            Assert.IsFalse(this.OptionalNullableInt_1 == this.Int0);
 
             // Test that unintialized optionals are equal to nulls
             Assert.IsTrue(this.OptionalNoValueInt.Equals(null));
