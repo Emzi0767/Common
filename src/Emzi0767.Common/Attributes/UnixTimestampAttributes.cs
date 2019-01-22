@@ -14,9 +14,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System;
-
-namespace Emzi0767.Attributes
+namespace System.Runtime.Serialization
 {
     /// <summary>
     /// <para>Specifies that this <see cref="DateTime"/> or <see cref="DateTimeOffset"/> will be serialized as Unix timestamp seconds.</para>
