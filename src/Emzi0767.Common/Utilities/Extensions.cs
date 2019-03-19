@@ -312,5 +312,32 @@ namespace System
 
             return inclusive ? (num >= min && num <= max) : (num > min && num < max);
         }
+
+        /// <summary>
+        /// Returns whether supplied character is in any of the following ranges: a-z, A-Z, 0-9.
+        /// </summary>
+        /// <param name="c">Character to test.</param>
+        /// <returns>Whether the character is in basic alphanumeric character range.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool IsBasicAlphanumeric(this char c)
+            => (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9');
+
+        /// <summary>
+        /// Returns whether supplied character is in the 0-9 range.
+        /// </summary>
+        /// <param name="c">Character to test.</param>
+        /// <returns>Whether the character is in basic numeric digit character range.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool IsBasicDigit(this char c)
+            => c >= '0' && c <= '9';
+
+        /// <summary>
+        /// Returns whether supplied character is in the a-z or A-Z range.
+        /// </summary>
+        /// <param name="c">Character to test.</param>
+        /// <returns>Whether the character is in basic letter character range.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool IsBasicLetter(this char c)
+            => (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z');
     }
 }
