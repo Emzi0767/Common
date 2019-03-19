@@ -71,5 +71,32 @@ namespace Emzi0767.Common.Tests
             Assert.IsFalse(p0.IsInitialized);
             Assert.AreEqual(0, p1.Value);
         }
+
+        [TestMethod]
+        public void TestDictionaryConversion()
+        {
+            var x = new { Text = "Behold, an anonymous object", Number = 42 };
+            var y = new { Text = "Another anonymous object", Number = 69 };
+            var z = new TestClass0();
+            var w = new TestClass1(42);
+            var v = ReflectionUtilities.CreateEmpty<TestClass0>();
+
+            var dx = x.ToDictionary();
+            var dy = y.ToDictionary();
+            var dz = z.ToDictionary();
+            var dw = w.ToDictionary();
+            var dv = v.ToDictionary();
+
+            Assert.AreEqual(x.Text, dx["Text"]);
+            Assert.AreEqual(y.Text, dy["Text"]);
+            Assert.AreNotEqual(x.Text, dy["Text"]);
+            Assert.AreEqual(x.Number, dx["Number"]);
+            Assert.AreEqual(y.Number, dy["Number"]);
+            Assert.AreNotEqual(x.Number, dy["Number"]);
+            Assert.AreNotEqual(dx["Text"], dx["Number"]);
+            Assert.AreEqual(true, dz["IsInitialized"]);
+            Assert.AreEqual(43, dw["Value"]);
+            Assert.AreEqual(false, dv["IsInitialized"]);
+        }
     }
 }

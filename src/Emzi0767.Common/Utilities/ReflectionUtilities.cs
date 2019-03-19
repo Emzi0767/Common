@@ -14,6 +14,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.Linq;
 using System.Runtime.Serialization;
 
 namespace System.Reflection
@@ -46,5 +49,20 @@ namespace System.Reflection
         /// <returns>Empty, uninitalized object of specified type.</returns>
         public static T CreateEmpty<T>()
             => (T)FormatterServices.GetUninitializedObject(typeof(T));
+
+        /// <summary>
+        /// Converts a given object into a dictionary of property name to property value mappings.
+        /// </summary>
+        /// <typeparam name="T">Type of object to convert.</typeparam>
+        /// <param name="obj">Object to convert.</param>
+        /// <returns>Converted dictionary.</returns>
+        public static IReadOnlyDictionary<string, object> ToDictionary<T>(this T obj)
+        {
+            if (obj == null)
+                throw new NullReferenceException();
+
+            return new ReadOnlyDictionary<string, object>(typeof(T).GetProperties(BindingFlags.Public | BindingFlags.Instance)
+                .ToDictionary(x => x.Name, x => x.GetValue(obj)));
+        }
     }
 }
