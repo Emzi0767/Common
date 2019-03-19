@@ -339,5 +339,25 @@ namespace System
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool IsBasicLetter(this char c)
             => (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z');
+
+        /// <summary>
+        /// Tests whether given string ends with given character.
+        /// </summary>
+        /// <param name="s">String to test.</param>
+        /// <param name="c">Character to test for.</param>
+        /// <returns>Whether the supplied string ends with supplied character.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool EndsWithCharacter(this string s, char c)
+            => s.Length >= 1 && s[s.Length - 1] == c;
+
+        /// <summary>
+        /// Tests whether given string starts with given character.
+        /// </summary>
+        /// <param name="s">String to test.</param>
+        /// <param name="c">Character to test for.</param>
+        /// <returns>Whether the supplied string starts with supplied character.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool StartsWithCharacter(this string s, char c)
+            => s.Length >= 1 && s[0] == c;
     }
 }
