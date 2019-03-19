@@ -41,37 +41,34 @@ namespace System.Threading.Tasks
             // wait for execution slot
             this.Semaphore.Wait();
 
-            // this is used to capture task execution exception
-            Exception taskex = null;
+            // create state object
+            var taskState = new StateRef<object>(new AutoResetEvent(false));
 
             // queue a task and wait for it to finish executing
-            var are = new AutoResetEvent(false);
-            _ = Task.Run(Executor);
-            are.WaitOne();
+            task.ContinueWith(TaskCompletionHandler, taskState);
+            taskState.Lock.WaitOne();
 
             // release execution slot
             this.Semaphore.Release();
 
             // check for and rethrow any exceptions
-            if (taskex != null)
-                throw new Exception("Exception occured while executing asynchronous code.", taskex);
+            if (taskState.Exception != null)
+                throw new Exception("Exception occured while executing asynchronous code.", taskState.Exception);
 
-            // executor method
-            async Task Executor()
+            // completion method
+            void TaskCompletionHandler(Task t, object state)
             {
-                try
-                {
-                    // try and execute the supplied task
-                    await task;
-                }
-                catch (Exception ex)
-                {
-                    // capture any exceptions
-                    taskex = ex;
-                }
+                // retrieve state data
+                var stateRef = state as StateRef<object>;
+
+                // retrieve any exceptions or cancellation status
+                if (t.IsFaulted)
+                    stateRef.Exception = t.Exception;
+                else if (t.IsCanceled)
+                    stateRef.Exception = new TaskCanceledException(t);
 
                 // signal that the execution is done
-                are.Set();
+                stateRef.Lock.Set();
             }
         }
 
@@ -86,41 +83,76 @@ namespace System.Threading.Tasks
             // wait for execution slot
             this.Semaphore.Wait();
 
-            // this is used to capture task execution exception and result
-            Exception taskex = null;
-            T result = default;
+            // create state object
+            var taskState = new StateRef<T>(new AutoResetEvent(false));
 
             // queue a task and wait for it to finish executing
-            var are = new AutoResetEvent(false);
-            _ = Task.Run(Executor);
-            are.WaitOne();
+            task.ContinueWith(TaskCompletionHandler, taskState);
+            taskState.Lock.WaitOne();
 
             // release execution slot
             this.Semaphore.Release();
 
             // check for and rethrow any exceptions
-            if (taskex != null)
-                throw new Exception("Exception occured while executing asynchronous code.", taskex);
+            if (taskState.Exception != null)
+                throw new Exception("Exception occured while executing asynchronous code.", taskState.Exception);
 
-            // return the execution result
-            return result;
+            // return the result, if any
+            if (taskState.HasResult)
+                return taskState.Result;
 
-            // executor method
-            async Task Executor()
+            // throw exception if no result
+            throw new Exception("Task returned no result.");
+
+            // completion method
+            void TaskCompletionHandler(Task<T> t, object state)
             {
-                try
-                {
-                    // try and execute the supplied task
-                    result = await task;
-                }
-                catch (Exception ex)
-                {
-                    // capture any exceptions
-                    taskex = ex;
-                }
+                // retrieve state data
+                var stateRef = state as StateRef<T>;
+
+                // retrieve any exceptions or cancellation status
+                if (t.IsFaulted)
+                    stateRef.Exception = t.Exception;
+                else if (t.IsCanceled)
+                    stateRef.Exception = new TaskCanceledException(t);
 
                 // signal that the execution is done
-                are.Set();
+                stateRef.Lock.Set();
+
+                // return the result from the task, if any
+                if (t.IsCompleted)
+                {
+                    stateRef.HasResult = true;
+                    stateRef.Result = t.Result;
+                }
+            }
+        }
+
+        private sealed class StateRef<T>
+        {
+            /// <summary>
+            /// Gets the lock used to wait for task's completion.
+            /// </summary>
+            public AutoResetEvent Lock { get; }
+
+            /// <summary>
+            /// Gets the exception that occured during task's execution, if any.
+            /// </summary>
+            public Exception Exception { get; set; }
+
+            /// <summary>
+            /// Gets the result returned by the task.
+            /// </summary>
+            public T Result { get; set; }
+
+            /// <summary>
+            /// Gets whether the task returned a result.
+            /// </summary>
+            public bool HasResult { get; set; } = false;
+
+            public StateRef(AutoResetEvent @lock)
+            {
+                this.Lock = @lock;
             }
         }
     }
