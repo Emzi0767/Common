@@ -36,8 +36,8 @@ namespace System.Threading.Tasks
         public TimeSpan MaximumExecutionTime { get; }
 
         private readonly object _lock;
-        private List<AsyncEventHandler<TSender, TArgs>> _handlers { get; }
-        private AsyncEventExceptionHandler<TSender, TArgs> _exceptionHandler { get; }
+        private readonly List<AsyncEventHandler<TSender, TArgs>> _handlers;
+        private readonly AsyncEventExceptionHandler<TSender, TArgs> _exceptionHandler;
 
         /// <summary>
         /// Creates a new asynchronous event with specified name and exception handler.
