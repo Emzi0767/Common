@@ -15,6 +15,7 @@
 // limitations under the License.
 
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 
 namespace System
 {
@@ -36,6 +37,280 @@ namespace System
         {
             key = kvp.Key;
             value = kvp.Value;
+        }
+
+        /// <summary>
+        /// Calculates the length of string representation of given number in base 10 (including sign, if present).
+        /// </summary>
+        /// <param name="num">Number to calculate the length of.</param>
+        /// <returns>Calculated number length.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static int CalculateLength(this sbyte num)
+            => num == 0 ? 1 : (int)Math.Floor(Math.Log10(Math.Abs(num == sbyte.MinValue ? num + 1 : num))) + (num < 0 ? 2 /* include sign */ : 1);
+
+        /// <summary>
+        /// Calculates the length of string representation of given number in base 10 (including sign, if present).
+        /// </summary>
+        /// <param name="num">Number to calculate the length of.</param>
+        /// <returns>Calculated nuembr length.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static int CalculateLength(this byte num)
+            => num == 0 ? 1 : (int)Math.Floor(Math.Log10(num)) + 1;
+
+        /// <summary>
+        /// Calculates the length of string representation of given number in base 10 (including sign, if present).
+        /// </summary>
+        /// <param name="num">Number to calculate the length of.</param>
+        /// <returns>Calculated number length.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static int CalculateLength(this short num)
+            => num == 0 ? 1 : (int)Math.Floor(Math.Log10(Math.Abs(num == short.MinValue ? num + 1 : num))) + (num < 0 ? 2 /* include sign */ : 1);
+
+        /// <summary>
+        /// Calculates the length of string representation of given number in base 10 (including sign, if present).
+        /// </summary>
+        /// <param name="num">Number to calculate the length of.</param>
+        /// <returns>Calculated nuembr length.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static int CalculateLength(this ushort num)
+            => num == 0 ? 1 : (int)Math.Floor(Math.Log10(num)) + 1;
+
+        /// <summary>
+        /// Calculates the length of string representation of given number in base 10 (including sign, if present).
+        /// </summary>
+        /// <param name="num">Number to calculate the length of.</param>
+        /// <returns>Calculated number length.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static int CalculateLength(this int num)
+            => num == 0 ? 1 : (int)Math.Floor(Math.Log10(Math.Abs(num == int.MinValue ? num + 1 : num))) + (num < 0 ? 2 /* include sign */ : 1);
+
+        /// <summary>
+        /// Calculates the length of string representation of given number in base 10 (including sign, if present).
+        /// </summary>
+        /// <param name="num">Number to calculate the length of.</param>
+        /// <returns>Calculated nuembr length.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static int CalculateLength(this uint num)
+            => num == 0 ? 1 : (int)Math.Floor(Math.Log10(num)) + 1;
+
+        /// <summary>
+        /// Calculates the length of string representation of given number in base 10 (including sign, if present).
+        /// </summary>
+        /// <param name="num">Number to calculate the length of.</param>
+        /// <returns>Calculated number length.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static int CalculateLength(this long num)
+            => num == 0 ? 1 : (int)Math.Floor(Math.Log10(Math.Abs(num == long.MinValue ? num + 1 : num))) + (num < 0 ? 2 /* include sign */ : 1);
+
+        /// <summary>
+        /// Calculates the length of string representation of given number in base 10 (including sign, if present).
+        /// </summary>
+        /// <param name="num">Number to calculate the length of.</param>
+        /// <returns>Calculated nuembr length.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static int CalculateLength(this ulong num)
+            => num == 0 ? 1 : (int)Math.Floor(Math.Log10(num)) + 1;
+
+        /// <summary>
+        /// Tests wheter given value is in supplied range, optionally allowing it to be an exclusive check.
+        /// </summary>
+        /// <param name="num">Number to test.</param>
+        /// <param name="min">Lower bound of the range.</param>
+        /// <param name="max">Upper bound of the range.</param>
+        /// <param name="inclusive">Whether the check is to be inclusive.</param>
+        /// <returns>Whether the value is in range.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool IsInRange(this sbyte num, sbyte min, sbyte max, bool inclusive = true)
+        {
+            if (min > max)
+            {
+                min ^= max;
+                max ^= min;
+                min ^= max;
+            }
+
+            return inclusive ? (num >= min && num <= max) : (num > min && num < max);
+        }
+
+        /// <summary>
+        /// Tests wheter given value is in supplied range, optionally allowing it to be an exclusive check.
+        /// </summary>
+        /// <param name="num">Number to test.</param>
+        /// <param name="min">Lower bound of the range.</param>
+        /// <param name="max">Upper bound of the range.</param>
+        /// <param name="inclusive">Whether the check is to be inclusive.</param>
+        /// <returns>Whether the value is in range.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool IsInRange(this byte num, byte min, byte max, bool inclusive = true)
+        {
+            if (min > max)
+            {
+                min ^= max;
+                max ^= min;
+                min ^= max;
+            }
+
+            return inclusive ? (num >= min && num <= max) : (num > min && num < max);
+        }
+
+        /// <summary>
+        /// Tests wheter given value is in supplied range, optionally allowing it to be an exclusive check.
+        /// </summary>
+        /// <param name="num">Number to test.</param>
+        /// <param name="min">Lower bound of the range.</param>
+        /// <param name="max">Upper bound of the range.</param>
+        /// <param name="inclusive">Whether the check is to be inclusive.</param>
+        /// <returns>Whether the value is in range.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool IsInRange(this short num, short min, short max, bool inclusive = true)
+        {
+            if (min > max)
+            {
+                min ^= max;
+                max ^= min;
+                min ^= max;
+            }
+
+            return inclusive ? (num >= min && num <= max) : (num > min && num < max);
+        }
+        
+        /// <summary>
+        /// Tests wheter given value is in supplied range, optionally allowing it to be an exclusive check.
+        /// </summary>
+        /// <param name="num">Number to test.</param>
+        /// <param name="min">Lower bound of the range.</param>
+        /// <param name="max">Upper bound of the range.</param>
+        /// <param name="inclusive">Whether the check is to be inclusive.</param>
+        /// <returns>Whether the value is in range.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool IsInRange(this ushort num, ushort min, ushort max, bool inclusive = true)
+        {
+            if (min > max)
+            {
+                min ^= max;
+                max ^= min;
+                min ^= max;
+            }
+
+            return inclusive ? (num >= min && num <= max) : (num > min && num < max);
+        }
+
+        /// <summary>
+        /// Tests wheter given value is in supplied range, optionally allowing it to be an exclusive check.
+        /// </summary>
+        /// <param name="num">Number to test.</param>
+        /// <param name="min">Lower bound of the range.</param>
+        /// <param name="max">Upper bound of the range.</param>
+        /// <param name="inclusive">Whether the check is to be inclusive.</param>
+        /// <returns>Whether the value is in range.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool IsInRange(this int num, int min, int max, bool inclusive = true)
+        {
+            if (min > max)
+            {
+                min ^= max;
+                max ^= min;
+                min ^= max;
+            }
+
+            return inclusive ? (num >= min && num <= max) : (num > min && num < max);
+        }
+
+        /// <summary>
+        /// Tests wheter given value is in supplied range, optionally allowing it to be an exclusive check.
+        /// </summary>
+        /// <param name="num">Number to test.</param>
+        /// <param name="min">Lower bound of the range.</param>
+        /// <param name="max">Upper bound of the range.</param>
+        /// <param name="inclusive">Whether the check is to be inclusive.</param>
+        /// <returns>Whether the value is in range.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool IsInRange(this uint num, uint min, uint max, bool inclusive = true)
+        {
+            if (min > max)
+            {
+                min ^= max;
+                max ^= min;
+                min ^= max;
+            }
+
+            return inclusive ? (num >= min && num <= max) : (num > min && num < max);
+        }
+
+        /// <summary>
+        /// Tests wheter given value is in supplied range, optionally allowing it to be an exclusive check.
+        /// </summary>
+        /// <param name="num">Number to test.</param>
+        /// <param name="min">Lower bound of the range.</param>
+        /// <param name="max">Upper bound of the range.</param>
+        /// <param name="inclusive">Whether the check is to be inclusive.</param>
+        /// <returns>Whether the value is in range.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool IsInRange(this long num, long min, long max, bool inclusive = true)
+        {
+            if (min > max)
+            {
+                min ^= max;
+                max ^= min;
+                min ^= max;
+            }
+
+            return inclusive ? (num >= min && num <= max) : (num > min && num < max);
+        }
+
+        /// <summary>
+        /// Tests wheter given value is in supplied range, optionally allowing it to be an exclusive check.
+        /// </summary>
+        /// <param name="num">Number to test.</param>
+        /// <param name="min">Lower bound of the range.</param>
+        /// <param name="max">Upper bound of the range.</param>
+        /// <param name="inclusive">Whether the check is to be inclusive.</param>
+        /// <returns>Whether the value is in range.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool IsInRange(this ulong num, ulong min, ulong max, bool inclusive = true)
+        {
+            if (min > max)
+            {
+                min ^= max;
+                max ^= min;
+                min ^= max;
+            }
+
+            return inclusive ? (num >= min && num <= max) : (num > min && num < max);
+        }
+
+        /// <summary>
+        /// Tests wheter given value is in supplied range, optionally allowing it to be an exclusive check.
+        /// </summary>
+        /// <param name="num">Number to test.</param>
+        /// <param name="min">Lower bound of the range.</param>
+        /// <param name="max">Upper bound of the range.</param>
+        /// <param name="inclusive">Whether the check is to be inclusive.</param>
+        /// <returns>Whether the value is in range.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool IsInRange(this float num, float min, float max, bool inclusive = true)
+        {
+            if (min > max)
+                return false;
+
+            return inclusive ? (num >= min && num <= max) : (num > min && num < max);
+        }
+
+        /// <summary>
+        /// Tests wheter given value is in supplied range, optionally allowing it to be an exclusive check.
+        /// </summary>
+        /// <param name="num">Number to test.</param>
+        /// <param name="min">Lower bound of the range.</param>
+        /// <param name="max">Upper bound of the range.</param>
+        /// <param name="inclusive">Whether the check is to be inclusive.</param>
+        /// <returns>Whether the value is in range.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool IsInRange(this double num, double min, double max, bool inclusive = true)
+        {
+            if (min > max)
+                return false;
+
+            return inclusive ? (num >= min && num <= max) : (num > min && num < max);
         }
     }
 }
