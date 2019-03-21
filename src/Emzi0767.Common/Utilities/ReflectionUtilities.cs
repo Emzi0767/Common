@@ -15,7 +15,6 @@
 // limitations under the License.
 
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Linq;
 using System.Runtime.Serialization;
 
@@ -61,8 +60,8 @@ namespace System.Reflection
             if (obj == null)
                 throw new NullReferenceException();
 
-            return new ReadOnlyDictionary<string, object>(typeof(T).GetProperties(BindingFlags.Public | BindingFlags.Instance)
-                .ToDictionary(x => x.Name, x => x.GetValue(obj)));
+            return new CharSpanLookupReadOnlyDictionary<object>(typeof(T).GetProperties(BindingFlags.Public | BindingFlags.Instance)
+                .Select(x => new KeyValuePair<string, object>(x.Name, x.GetValue(obj))));
         }
     }
 }
