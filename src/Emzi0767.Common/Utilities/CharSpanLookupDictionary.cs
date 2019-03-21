@@ -30,14 +30,14 @@ namespace System.Collections.Generic
         /// <summary>
         /// Gets the collection of all keys present in this dictionary.
         /// </summary>
-        public IEnumerable<string> Keys => (this as IDictionary<string, TValue>).Keys;
+        public IEnumerable<string> Keys => this.GetKeysInternal();
         ICollection<string> IDictionary<string, TValue>.Keys => this.GetKeysInternal();
         ICollection IDictionary.Keys => this.GetKeysInternal();
 
         /// <summary>
         /// Gets the collection of all values present in this dictionary.
         /// </summary>
-        public IEnumerable<TValue> Values => (this as IDictionary<string, TValue>).Values;
+        public IEnumerable<TValue> Values => this.GetValuesInternal();
         ICollection<TValue> IDictionary<string, TValue>.Values => this.GetValuesInternal();
         ICollection IDictionary.Values => this.GetValuesInternal();
 
@@ -258,7 +258,7 @@ namespace System.Collections.Generic
             if (key == null)
                 throw new ArgumentNullException(nameof(key));
 
-            return this.TryRemove(key.AsSpan(), out value);
+            return this.TryRemoveInternal(key.AsSpan(), out value);
         }
 
         /// <summary>
@@ -268,7 +268,7 @@ namespace System.Collections.Generic
         /// <param name="value">Removed value.</param>
         /// <returns>Whether the operation was successful.</returns>
         public bool TryRemove(ReadOnlySpan<char> key, out TValue value)
-            => this.TryRemove(key, out value);
+            => this.TryRemoveInternal(key, out value);
 
         /// <summary>
         /// Checks whether this dictionary contains the specified key.

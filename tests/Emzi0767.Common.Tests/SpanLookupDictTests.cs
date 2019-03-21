@@ -16,6 +16,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -218,6 +219,74 @@ namespace Emzi0767.Common.Tests
             }
 
             Assert.AreEqual(0, dict.Count);
+        }
+
+        [TestMethod]
+        public void TestClearing()
+        {
+            var dict = new CharSpanLookupDictionary<int>(this.TestValues.Select(x => new KeyValuePair<string, int>(x.Key, x.Value)));
+            Assert.AreEqual(this.TestValues.Count(), dict.Count);
+
+            dict.Clear();
+            Assert.AreEqual(0, dict.Count);
+        }
+
+        [TestMethod]
+        public void TestEnumeration()
+        {
+            var dict = new CharSpanLookupDictionary<int>(this.TestValues.Select(x => new KeyValuePair<string, int>(x.Key, x.Value)));
+            Assert.AreEqual(this.TestValues.Count(), dict.Count);
+
+            var i = 0;
+            foreach (var (k, v) in dict)
+            {
+                Assert.IsTrue(this.TestValues.Any(x => x.Key == k && x.Value == v));
+                i++;
+            }
+            Assert.AreEqual(this.TestValues.Count(), i);
+
+            dict.Clear();
+            Assert.AreEqual(0, dict.Count);
+
+            i = 0;
+            foreach (var (k, v) in dict)
+            {
+                Assert.Fail();
+                i++;
+            }
+            Assert.AreEqual(0, i);
+        }
+
+        [TestMethod]
+        public void TestKeysValues()
+        {
+            var dict = new CharSpanLookupDictionary<int>(this.TestValues.Select(x => new KeyValuePair<string, int>(x.Key, x.Value)));
+            Assert.AreEqual(this.TestValues.Count(), dict.Count);
+
+            var keys = this.TestValues.Select(x => x.Key).ToImmutableArray();
+            var vals = this.TestValues.Select(x => x.Value).ToImmutableArray();
+
+            var i = 0;
+            var dkeys = dict.Keys;
+            Assert.IsNotNull(dkeys);
+            Assert.AreEqual(dict.Count, dkeys.Count());
+            foreach (var k in dkeys)
+            {
+                Assert.IsTrue(keys.Contains(k));
+                i++;
+            }
+            Assert.AreEqual(dict.Count, i);
+
+            i = 0;
+            var dvals = dict.Values;
+            Assert.IsNotNull(dvals);
+            Assert.AreEqual(dict.Count, dvals.Count());
+            foreach (var v in dvals)
+            {
+                Assert.IsTrue(vals.Contains(v));
+                i++;
+            }
+            Assert.AreEqual(dict.Count, i);
         }
     }
 }
