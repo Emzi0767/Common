@@ -14,6 +14,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System.Diagnostics;
 using System.Reflection;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -81,22 +82,41 @@ namespace Emzi0767.Common.Tests
             var w = new TestClass1(42);
             var v = ReflectionUtilities.CreateEmpty<TestClass0>();
 
-            var dx = x.ToDictionary();
-            var dy = y.ToDictionary();
-            var dz = z.ToDictionary();
-            var dw = w.ToDictionary();
-            var dv = v.ToDictionary();
+            var dxf = x.ToDictionary();
+            var dyf = y.ToDictionary();
+            var dzf = z.ToDictionary();
+            var dwf = w.ToDictionary();
+            var dvf = v.ToDictionary();
 
-            Assert.AreEqual(x.Text, dx["Text"]);
-            Assert.AreEqual(y.Text, dy["Text"]);
-            Assert.AreNotEqual(x.Text, dy["Text"]);
-            Assert.AreEqual(x.Number, dx["Number"]);
-            Assert.AreEqual(y.Number, dy["Number"]);
-            Assert.AreNotEqual(x.Number, dy["Number"]);
-            Assert.AreNotEqual(dx["Text"], dx["Number"]);
-            Assert.AreEqual(true, dz["IsInitialized"]);
-            Assert.AreEqual(43, dw["Value"]);
-            Assert.AreEqual(false, dv["IsInitialized"]);
+            var dxs = x.ToDictionary(false);
+            var dys = y.ToDictionary(false);
+            var dzs = z.ToDictionary(false);
+            var dws = w.ToDictionary(false);
+            var dvs = v.ToDictionary(false);
+
+            Assert.AreEqual(x.Text, dxf["Text"]);
+            Assert.AreEqual(y.Text, dyf["Text"]);
+            Assert.AreNotEqual(x.Text, dyf["Text"]);
+            Assert.AreEqual(x.Number, dxf["Number"]);
+            Assert.AreEqual(y.Number, dyf["Number"]);
+            Assert.AreNotEqual(x.Number, dyf["Number"]);
+            Assert.AreNotEqual(dxf["Text"], dxf["Number"]);
+            Assert.AreEqual(true, dzf["IsInitialized"]);
+            Assert.AreEqual(43, dwf["Value"]);
+            Assert.AreEqual(false, dvf["IsInitialized"]);
+
+            var sw = new Stopwatch();
+            sw.Start();
+            x.ToDictionary();
+            sw.Stop();
+            var tFast = sw.ElapsedTicks;
+
+            sw.Restart();
+            x.ToDictionary(false);
+            sw.Stop();
+            var tSlow = sw.ElapsedTicks;
+
+            Assert.IsTrue(tFast < tSlow);
         }
     }
 }

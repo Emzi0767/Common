@@ -14,9 +14,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Linq.Expressions;
+using System.Runtime.CompilerServices;
 using System.Runtime.Serialization;
 
 namespace System.Reflection
@@ -55,14 +59,76 @@ namespace System.Reflection
         /// </summary>
         /// <typeparam name="T">Type of object to convert.</typeparam>
         /// <param name="obj">Object to convert.</param>
+        /// <param name="useCachedModel">Whether a cached conversion model should be used. If you don't intend to reuse this method, set this to <see langword="false"/>.</param>
         /// <returns>Converted dictionary.</returns>
-        public static IReadOnlyDictionary<string, object> ToDictionary<T>(this T obj)
+        public static IReadOnlyDictionary<string, object> ToDictionary<T>(this T obj, bool useCachedModel = true)
         {
             if (obj == null)
                 throw new NullReferenceException();
+            
+            var t = typeof(T);
+            if (useCachedModel)
+            {
+                if (!TypeModelCache.TryGetValue(t, out var model))
+                    TypeModelCache.TryAdd(t, model = new TypeModel<T>(obj.GetReadableProperties()));
 
-            return new ReadOnlyDictionary<string, object>(typeof(T).GetProperties(BindingFlags.Public | BindingFlags.Instance)
-                .ToDictionary(x => x.Name, x => x.GetValue(obj)));
+                return model.Convert(obj);
+            }
+            else
+            {
+                return new ReadOnlyDictionary<string, object>(typeof(T).GetProperties(BindingFlags.Public | BindingFlags.Instance)
+                    .ToDictionary(x => x.Name, x => x.GetValue(obj)));
+            }
+        }
+
+        private static IEnumerable<(string, Func<T, object>)> GetReadableProperties<T>(this T obj)
+        {
+            var t = typeof(T);
+            var props = t.GetProperties(BindingFlags.Public | BindingFlags.Instance)
+                .Where(x => x.GetMethod != null && x.GetCustomAttribute<CompilerGeneratedAttribute>() == null);
+
+            foreach (var prop in props)
+            {
+                if (!prop.PropertyType.IsValueType)
+                {
+                    yield return (prop.Name, prop.GetMethod.CreateDelegate(typeof(Func<,>).MakeGenericType(t, prop.PropertyType)) as Func<T, object>);
+                }
+                else
+                {
+                    var inst = Expression.Parameter(t, "instance");
+                    var call = Expression.Call(inst, prop.GetMethod);
+                    var cast = Expression.Convert(call, typeof(object));
+                    yield return (prop.Name, Expression.Lambda<Func<T, object>>(cast, inst).Compile());
+                }
+            }
+        }
+
+        private static ConcurrentDictionary<Type, ITypeModel> TypeModelCache { get; } = new ConcurrentDictionary<Type, ITypeModel>();
+        private interface ITypeModel
+        {
+            IReadOnlyDictionary<string, object> Convert<TObj>(TObj obj);
+        }
+
+        private sealed class TypeModel<TModel> : ITypeModel
+        {
+            private ImmutableArray<(string Name, Func<TModel, object> GetAccessor)> Properties { get; }
+
+            public TypeModel(IEnumerable<(string, Func<TModel, object>)> props)
+            {
+                this.Properties = props.ToImmutableArray();
+            }
+
+            public IReadOnlyDictionary<string, object> Convert<TObj>(TObj obj)
+            {
+                if (!(obj is TModel model))
+                    return null;
+
+                var dict = new Dictionary<string, object>();
+                foreach (var (name, get) in this.Properties)
+                    dict[name] = get(model);
+
+                return new ReadOnlyDictionary<string, object>(dict);
+            }
         }
     }
 }
