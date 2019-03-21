@@ -359,5 +359,100 @@ namespace System
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool StartsWithCharacter(this string s, char c)
             => s.Length >= 1 && s[0] == c;
+
+        // https://stackoverflow.com/questions/9545619/a-fast-hash-function-for-string-in-c-sharp
+        // Calls are inlined to call the underlying method directly
+        /// <summary>
+        /// Computes a 64-bit Knuth hash from supplied characters.
+        /// </summary>
+        /// <param name="chars">Characters to compute the hash value from.</param>
+        /// <returns>Computer 64-bit Knuth hash.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static ulong CalculateKnuthHash(this ReadOnlySpan<char> chars)
+            => Knuth(chars);
+
+        /// <summary>
+        /// Computes a 64-bit Knuth hash from supplied characters.
+        /// </summary>
+        /// <param name="chars">Characters to compute the hash value from.</param>
+        /// <returns>Computer 64-bit Knuth hash.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static ulong CalculateKnuthHash(this Span<char> chars)
+            => Knuth(chars);
+
+        /// <summary>
+        /// Computes a 64-bit Knuth hash from supplied characters.
+        /// </summary>
+        /// <param name="chars">Characters to compute the hash value from.</param>
+        /// <returns>Computer 64-bit Knuth hash.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static ulong CalculateKnuthHash(this ReadOnlyMemory<char> chars)
+            => Knuth(chars.Span);
+
+        /// <summary>
+        /// Computes a 64-bit Knuth hash from supplied characters.
+        /// </summary>
+        /// <param name="chars">Characters to compute the hash value from.</param>
+        /// <returns>Computer 64-bit Knuth hash.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static ulong CalculateKnuthHash(this Memory<char> chars)
+            => Knuth(chars.Span);
+
+        /// <summary>
+        /// Computes a 64-bit Knuth hash from supplied characters.
+        /// </summary>
+        /// <param name="chars">Characters to compute the hash value from.</param>
+        /// <returns>Computer 64-bit Knuth hash.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static ulong CalculateKnuthHash(this ArraySegment<char> chars)
+            => Knuth(chars.AsSpan());
+
+        /// <summary>
+        /// Computes a 64-bit Knuth hash from supplied characters.
+        /// </summary>
+        /// <param name="chars">Characters to compute the hash value from.</param>
+        /// <returns>Computer 64-bit Knuth hash.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static ulong CalculateKnuthHash(this char[] chars)
+            => Knuth(chars.AsSpan());
+
+        /// <summary>
+        /// Computes a 64-bit Knuth hash from supplied characters.
+        /// </summary>
+        /// <param name="chars">Characters to compute the hash value from.</param>
+        /// <param name="start">Offset in the array to start calculating from.</param>
+        /// <param name="count">Number of characters to compute the hash from.</param>
+        /// <returns>Computer 64-bit Knuth hash.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static ulong CalculateKnuthHash(this char[] chars, int start, int count)
+            => Knuth(chars.AsSpan(start, count));
+
+        /// <summary>
+        /// Computes a 64-bit Knuth hash from supplied characters.
+        /// </summary>
+        /// <param name="chars">Characters to compute the hash value from.</param>
+        /// <returns>Computer 64-bit Knuth hash.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static ulong CalculateKnuthHash(this string chars)
+            => Knuth(chars.AsSpan());
+
+        /// <summary>
+        /// Computes a 64-bit Knuth hash from supplied characters.
+        /// </summary>
+        /// <param name="chars">Characters to compute the hash value from.</param>
+        /// <param name="start">Offset in the array to start calculating from.</param>
+        /// <param name="count">Number of characters to compute the hash from.</param>
+        /// <returns>Computer 64-bit Knuth hash.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static ulong CalculateKnuthHash(this string chars, int start, int count)
+            => Knuth(chars.AsSpan(start, count));
+
+        private static ulong Knuth(ReadOnlySpan<char> chars)
+        {
+            var hash = 3074457345618258791ul;
+            for (var i = 0; i < chars.Length; i++)
+                hash = (hash + chars[i]) * 3074457345618258799ul;
+            return hash;
+        }
     }
 }
