@@ -97,6 +97,10 @@ namespace Emzi0767.Common.Tests
             Assert.AreEqual(this.TestValues.Count(), dict.Count);
 
             foreach (var (k, v) in this.TestValues)
+                dict[k.AsSpan()] = v;
+            Assert.AreEqual(this.TestValues.Count(), dict.Count);
+
+            foreach (var (k, v) in this.TestValues)
                 Assert.IsTrue(dict.ContainsKey(k.AsSpan()));
         }
 

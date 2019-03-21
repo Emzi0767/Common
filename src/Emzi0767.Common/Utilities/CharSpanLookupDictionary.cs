@@ -93,6 +93,35 @@ namespace System.Collections.Generic
             }
         }
 
+        /// <summary>
+        /// Gets or sets a value corresponding to given key in this dictionary.
+        /// </summary>
+        /// <param name="key">Key to get or set the value for.</param>
+        /// <returns>Value matching the supplied key, if applicable.</returns>
+        public TValue this[ReadOnlySpan<char> key]
+        {
+            get
+            {
+                if (!this.TryRetrieveInternal(key, out var value))
+                    throw new KeyNotFoundException($"The given key was not present in the dictionary.");
+
+                return value;
+            }
+
+#if NETCOREAPP2_2
+            set => this.TryInsertInternal(new string(key), value, true);
+#else
+            set
+            {
+                unsafe
+                {
+                    fixed (char* chars = &key.GetPinnableReference())
+                        this.TryInsertInternal(new string(chars, 0, key.Length), value, true);
+                }
+            }
+#endif
+        }
+
         object IDictionary.this[object key]
         {
             get
@@ -122,20 +151,31 @@ namespace System.Collections.Generic
             }
         }
 
-        private Dictionary<ulong, KeyedValue> InternalBuckets { get; } = new Dictionary<ulong, KeyedValue>();
+        private Dictionary<ulong, KeyedValue> InternalBuckets { get; }
 
         /// <summary>
         /// Creates a new, empty <see cref="CharSpanLookupDictionary{TValue}"/> with string keys and items of type <typeparamref name="TValue"/>.
         /// </summary>
         public CharSpanLookupDictionary()
-        { }
+        {
+            this.InternalBuckets = new Dictionary<ulong, KeyedValue>();
+        }
+
+        /// <summary>
+        /// Creates a new, empty <see cref="CharSpanLookupDictionary{TValue}"/> with string keys and items of type <typeparamref name="TValue"/> and sets its initial capacity to specified value.
+        /// </summary>
+        /// <param name="initialCapacity">Initial capacity of the dictionary.</param>
+        public CharSpanLookupDictionary(int initialCapacity)
+        {
+            this.InternalBuckets = new Dictionary<ulong, KeyedValue>(initialCapacity);
+        }
 
         /// <summary>
         /// Creates a new <see cref="CharSpanLookupDictionary{TValue}"/> with string keys and items of type <typeparamref name="TValue"/> and populates it with key-value pairs from supplied dictionary.
         /// </summary>
-        /// <param name="values">Dictionary containing items to populate this dicionary with.</param>
+        /// <param name="values">Dictionary containing items to populate this dictionary with.</param>
         public CharSpanLookupDictionary(IDictionary<string, TValue> values)
-            : this()
+            : this(values.Count)
         {
             foreach (var (k, v) in values)
                 this.Add(k, v);
@@ -144,9 +184,9 @@ namespace System.Collections.Generic
         /// <summary>
         /// Creates a new <see cref="CharSpanLookupDictionary{TValue}"/> with string keys and items of type <typeparamref name="TValue"/> and populates it with key-value pairs from supplied dictionary.
         /// </summary>
-        /// <param name="values">Dictionary containing items to populate this dicionary with.</param>
+        /// <param name="values">Dictionary containing items to populate this dictionary with.</param>
         public CharSpanLookupDictionary(IReadOnlyDictionary<string, TValue> values)
-             : this()
+             : this(values.Count)
         {
             foreach (var (k, v) in values)
                 this.Add(k, v);
@@ -155,7 +195,7 @@ namespace System.Collections.Generic
         /// <summary>
         /// Creates a new <see cref="CharSpanLookupDictionary{TValue}"/> with string keys and items of type <typeparamref name="TValue"/> and populates it with key-value pairs from supplied key-value collection.
         /// </summary>
-        /// <param name="values">Dictionary containing items to populate this dicionary with.</param>
+        /// <param name="values">Dictionary containing items to populate this dictionary with.</param>
         public CharSpanLookupDictionary(IEnumerable<KeyValuePair<string, TValue>> values)
             : this()
         {
@@ -530,7 +570,7 @@ namespace System.Collections.Generic
                 }
             }
 
-            return builder.ToImmutable();
+            return builder.MoveToImmutable();
         }
 
         private ImmutableArray<TValue> GetValuesInternal()
@@ -546,7 +586,7 @@ namespace System.Collections.Generic
                 }
             }
 
-            return builder.ToImmutable();
+            return builder.MoveToImmutable();
         }
 
         private class KeyedValue

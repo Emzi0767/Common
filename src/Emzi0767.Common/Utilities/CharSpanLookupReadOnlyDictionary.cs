@@ -41,7 +41,7 @@ namespace System.Collections.Generic
         public int Count { get; }
 
         /// <summary>
-        /// Gets or sets a value corresponding to given key in this dictionary.
+        /// Gets a value corresponding to given key in this dictionary.
         /// </summary>
         /// <param name="key">Key to get or set the value for.</param>
         /// <returns>Value matching the supplied key, if applicable.</returns>
@@ -59,12 +59,28 @@ namespace System.Collections.Generic
             }
         }
 
-        private IReadOnlyDictionary<ulong, KeyedValue> InternalBuckets { get; } = new Dictionary<ulong, KeyedValue>();
+        /// <summary>
+        /// Gets a value corresponding to given key in this dictionary.
+        /// </summary>
+        /// <param name="key">Key to get or set the value for.</param>
+        /// <returns>Value matching the supplied key, if applicable.</returns>
+        public TValue this[ReadOnlySpan<char> key]
+        {
+            get
+            {
+                if (!this.TryRetrieveInternal(key, out var value))
+                    throw new KeyNotFoundException($"The given key was not present in the dictionary.");
+
+                return value;
+            }
+        }
+
+        private IReadOnlyDictionary<ulong, KeyedValue> InternalBuckets { get; }
 
         /// <summary>
         /// Creates a new <see cref="CharSpanLookupReadOnlyDictionary{TValue}"/> with string keys and items of type <typeparamref name="TValue"/> and populates it with key-value pairs from supplied dictionary.
         /// </summary>
-        /// <param name="values">Dictionary containing items to populate this dicionary with.</param>
+        /// <param name="values">Dictionary containing items to populate this dictionary with.</param>
         public CharSpanLookupReadOnlyDictionary(IDictionary<string, TValue> values)
             : this(values as IEnumerable<KeyValuePair<string, TValue>>)
         { }
@@ -72,7 +88,7 @@ namespace System.Collections.Generic
         /// <summary>
         /// Creates a new <see cref="CharSpanLookupReadOnlyDictionary{TValue}"/> with string keys and items of type <typeparamref name="TValue"/> and populates it with key-value pairs from supplied dictionary.
         /// </summary>
-        /// <param name="values">Dictionary containing items to populate this dicionary with.</param>
+        /// <param name="values">Dictionary containing items to populate this dictionary with.</param>
         public CharSpanLookupReadOnlyDictionary(IReadOnlyDictionary<string, TValue> values)
             : this(values as IEnumerable<KeyValuePair<string, TValue>>)
         { }
@@ -80,7 +96,7 @@ namespace System.Collections.Generic
         /// <summary>
         /// Creates a new <see cref="CharSpanLookupReadOnlyDictionary{TValue}"/> with string keys and items of type <typeparamref name="TValue"/> and populates it with key-value pairs from supplied key-value collection.
         /// </summary>
-        /// <param name="values">Dictionary containing items to populate this dicionary with.</param>
+        /// <param name="values">Dictionary containing items to populate this dictionary with.</param>
         public CharSpanLookupReadOnlyDictionary(IEnumerable<KeyValuePair<string, TValue>> values)
         {
             this.InternalBuckets = PrepareItems(values, out var count);
@@ -186,7 +202,7 @@ namespace System.Collections.Generic
                 }
             }
 
-            return builder.ToImmutable();
+            return builder.MoveToImmutable();
         }
 
         private ImmutableArray<TValue> GetValuesInternal()
@@ -202,7 +218,7 @@ namespace System.Collections.Generic
                 }
             }
 
-            return builder.ToImmutable();
+            return builder.MoveToImmutable();
         }
 
         private static IReadOnlyDictionary<ulong, KeyedValue> PrepareItems(IEnumerable<KeyValuePair<string, TValue>> items, out int count)
