@@ -15,6 +15,7 @@
 // limitations under the License.
 
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -57,6 +58,25 @@ namespace Emzi0767.Common.Tests
             Assert.AreEqual(4, x.Instance);
             Assert.AreEqual(4, y.Instance);
             Assert.IsTrue(ReferenceEquals(x, y));
+        }
+
+        [TestMethod]
+        public void TestCancellationAsync()
+        {
+            using (var cts = new CancellationTokenSource())
+            {
+                _ = Task.Delay(100).ContinueWith(t => cts.Cancel());
+                Assert.ThrowsException<Exception>(() => this.Executor.Execute(Task.Delay(500, cts.Token)));
+            }
+
+            // infinite wait?
+            using (var cts = new CancellationTokenSource())
+            {
+                _ = Task.Delay(100).ContinueWith(t => cts.Cancel());
+                Assert.ThrowsException<Exception>(() => this.Executor.Execute(Task.Delay(-1, cts.Token)));
+            }
+
+            Assert.IsTrue(true, "Reached this point.");
         }
 
         private sealed class ByRef<T>

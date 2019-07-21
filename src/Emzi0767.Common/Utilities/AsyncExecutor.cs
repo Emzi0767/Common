@@ -21,16 +21,11 @@ namespace System.Threading.Tasks
     /// </summary>
     public class AsyncExecutor
     {
-        // this is used to wait for tasks to finish executing.
-        private SemaphoreSlim Semaphore { get; }
-
         /// <summary>
         /// Creates a new instance of asynchronous executor.
         /// </summary>
         public AsyncExecutor()
-        {
-            this.Semaphore = new SemaphoreSlim(1, 1);
-        }
+        { }
 
         /// <summary>
         /// Executes a specified task in an asynchronous manner, waiting for its completion.
@@ -38,18 +33,12 @@ namespace System.Threading.Tasks
         /// <param name="task">Task to execute.</param>
         public void Execute(Task task)
         {
-            // wait for execution slot
-            this.Semaphore.Wait();
-
             // create state object
             var taskState = new StateRef<object>(new AutoResetEvent(false));
 
             // queue a task and wait for it to finish executing
             task.ContinueWith(TaskCompletionHandler, taskState);
             taskState.Lock.WaitOne();
-
-            // release execution slot
-            this.Semaphore.Release();
 
             // check for and rethrow any exceptions
             if (taskState.Exception != null)
@@ -80,18 +69,12 @@ namespace System.Threading.Tasks
         /// <returns>Task's result.</returns>
         public T Execute<T>(Task<T> task)
         {
-            // wait for execution slot
-            this.Semaphore.Wait();
-
             // create state object
             var taskState = new StateRef<T>(new AutoResetEvent(false));
 
             // queue a task and wait for it to finish executing
             task.ContinueWith(TaskCompletionHandler, taskState);
             taskState.Lock.WaitOne();
-
-            // release execution slot
-            this.Semaphore.Release();
 
             // check for and rethrow any exceptions
             if (taskState.Exception != null)
