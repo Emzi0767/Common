@@ -57,7 +57,7 @@ namespace System
         /// Fills a supplied buffer with random nonzero bytes.
         /// </summary>
         /// <param name="buffer">Buffer to fill with random nonzero bytes.</param>
-        public void GetNonZeryBytes(byte[] buffer)
+        public void GetNonZeroBytes(byte[] buffer)
         {
             this.RNG.GetNonZeroBytes(buffer);
         }
