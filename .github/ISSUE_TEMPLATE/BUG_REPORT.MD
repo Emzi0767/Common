@@ -7,7 +7,7 @@ labels: bug
 Short summary of the bug.
 
 # Details
-Some details about the bug. You should put as much information about your environent, exceptions, etc. as possible in 
+Some details about the bug. You should put as much information about your environment, exceptions, etc. as possible in 
 here. This includes, but is not limited to, .NET Framework version (eg. .NET Core 2.2), operating system (Windows 7, 
 Debian GNU/Linux 9, etc.), IDE (e.g. Visual Studio 2017), exception type, message, and stack trace.
 

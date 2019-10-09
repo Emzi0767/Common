@@ -1,7 +1,7 @@
 # Looking for help with the code?
 Depending on the kind of problem you're encountering, you may wish to try one of the following methods to resolve it.
 
-Bear in mind, I will only provide support in english.
+Bear in mind, I will only provide support in English.
 
 ## Clean and rebuild your solution
 Sometimes, problems are solved by simply cleaning the solution, restarting your IDE, and rebuilding the project. 
