@@ -19,7 +19,7 @@ When opening issues, make sure the title reflects the purpose of the issue or th
 be brief. Further description belongs inside the issue or PR.
 
 # Descriptive changes
-I require the commits describe the change made. It can be a short description. If you fixed or resolved an open issue, 
+I require the commits describe the changes made. It can be a short description. If you fixed or resolved an open issue, 
 please reference it by using the #number notation.
 
 Examples of good commit messages:
@@ -32,7 +32,7 @@ Examples of good commit messages:
   Changed message cache behaviour:
   
   - Messages are now stored globally.
-  - Cache now deletes messages when they are deleted from discord.
+  - Cache now deletes messages when they are deleted from Discord.
   - Cache itself is now a ring buffer.
   ```
 
@@ -59,9 +59,6 @@ PRs that do not build will not be accepted.
 
 In the event your code change is a style change, XML doc change, or otherwise does not change how the code works, tag 
 the commit with `[ci skip]`.
-
-If you are implementing new functionality, or changing existing code, ensure that whatever you do is a reflection of 
-Discord's API (i.e. no weird helper methods).
 
 # Non-code changes
 In the event you change something outside of code (i.e. a meta-change or documentation), you must tag your commit with 
