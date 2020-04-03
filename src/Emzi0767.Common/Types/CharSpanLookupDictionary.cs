@@ -1,6 +1,6 @@
 ﻿// This file is part of Emzi0767.Common project
 //
-// Copyright 2019 Emzi0767
+// Copyright 2020 Emzi0767
 // 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,9 +14,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
+using System.Collections;
+using System.Collections.Generic;
 using System.Collections.Immutable;
 
-namespace System.Collections.Generic
+namespace Emzi0767
 {
     /// <summary>
     /// Represents collection of string keys and <typeparamref name="TValue"/> values, allowing the use of <see cref="ReadOnlySpan{T}"/> for dictionary operations.
@@ -108,7 +111,7 @@ namespace System.Collections.Generic
                 return value;
             }
 
-#if NETCOREAPP2_2
+#if NETCOREAPP
             set => this.TryInsertInternal(new string(key), value, true);
 #else
             set
@@ -220,7 +223,7 @@ namespace System.Collections.Generic
         /// <param name="key">Key to insert.</param>
         /// <param name="value">Value corresponding to this key.</param>
         public void Add(ReadOnlySpan<char> key, TValue value)
-#if NETCOREAPP2_2
+#if NETCOREAPP
         {
             if (!this.TryInsertInternal(new string(key), value, false))
                 throw new ArgumentException("Given key is already present in the dictionary.", nameof(key));
@@ -252,7 +255,7 @@ namespace System.Collections.Generic
         /// <param name="value">Value corresponding to this key.</param>
         /// <returns>Whether the operation was successful.</returns>
         public bool TryAdd(ReadOnlySpan<char> key, TValue value)
-#if NETCOREAPP2_2
+#if NETCOREAPP
             => this.TryInsertInternal(new string(key), value, false);
 #else
         {
@@ -413,7 +416,7 @@ namespace System.Collections.Generic
                 return;
             }
 
-            if (!(array is object[] boxArray))
+            if (!(array is object[]))
                 throw new ArgumentException($"Array needs to be an instance of {typeof(TValue[])} or object[].");
 
             var i = arrayIndex;

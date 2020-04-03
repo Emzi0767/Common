@@ -1,6 +1,6 @@
 ﻿// This file is part of Emzi0767.Common project
 //
-// Copyright 2019 Emzi0767
+// Copyright 2020 Emzi0767
 // 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,12 +14,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
 using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
 
-namespace System.Runtime
+namespace Emzi0767.Utilities
 {
     /// <summary>
     /// Gets information about current runtime.

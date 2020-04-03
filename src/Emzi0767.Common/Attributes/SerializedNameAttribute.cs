@@ -1,6 +1,6 @@
 ﻿// This file is a part of Emzi0767.Common project.
 // 
-// Copyright 2019 Emzi0767
+// Copyright 2020 Emzi0767
 // 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -16,7 +16,7 @@
 
 using System;
 
-namespace System.Runtime.Serialization
+namespace Emzi0767.Serialization
 {
     /// <summary>
     /// Declares name of a property in serialized data. This is used for mapping serialized data to object properties and fields.

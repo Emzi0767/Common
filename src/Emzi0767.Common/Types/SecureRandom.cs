@@ -1,6 +1,6 @@
 ﻿// This file is part of Emzi0767.Common project
 //
-// Copyright 2019 Emzi0767
+// Copyright 2020 Emzi0767
 // 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,12 +14,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
 using System.Buffers;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 
-namespace System
+namespace Emzi0767
 {
     /// <summary>
     /// Provides a cryptographically-secure pseudorandom number generator (CSPRNG) implementation compatible with <see cref="Random"/>.
@@ -68,7 +69,7 @@ namespace System
         /// <param name="buffer">Memmory region to fill with random bytes.</param>
         public void GetBytes(Span<byte> buffer)
         {
-#if NETCOREAPP2_2
+#if NETCOREAPP
             this.RNG.GetBytes(buffer);
 #else
             var buff = ArrayPool<byte>.Shared.Rent(buffer.Length);
@@ -91,7 +92,7 @@ namespace System
         /// <param name="buffer">Memmory region to fill with random nonzero bytes.</param>
         public void GetNonZeroBytes(Span<byte> buffer)
         {
-#if NETCOREAPP2_2
+#if NETCOREAPP
             this.RNG.GetNonZeroBytes(buffer);
 #else
             var buff = ArrayPool<byte>.Shared.Rent(buffer.Length);
@@ -298,7 +299,7 @@ namespace System
         /// Fills specified memory region with random bytes.
         /// </summary>
         /// <param name="buffer">Memory region to fill with bytes.</param>
-        #if NETCOREAPP2_2 
+        #if NETCOREAPP
         override 
         #endif 
         public void NextBytes(Span<byte> buffer)

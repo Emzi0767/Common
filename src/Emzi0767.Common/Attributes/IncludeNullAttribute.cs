@@ -1,6 +1,6 @@
 ﻿// This file is a part of Emzi0767.Common project.
 // 
-// Copyright 2019 Emzi0767
+// Copyright 2020 Emzi0767
 // 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,7 +14,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-namespace System.Runtime.Serialization
+using System;
+
+namespace Emzi0767.Serialization
 {
     /// <summary>
     /// <para>Specifies that if the value of the field or property is null, it should be included in the serialized data.</para>

@@ -1,6 +1,6 @@
 ﻿// This file is a part of Emzi0767.Common project.
 // 
-// Copyright 2019 Emzi0767
+// Copyright 2020 Emzi0767
 // 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,6 +17,7 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using Emzi0767.Utilities;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Emzi0767.Common.Tests

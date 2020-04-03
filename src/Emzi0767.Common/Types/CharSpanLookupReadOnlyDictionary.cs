@@ -1,6 +1,6 @@
 ﻿// This file is part of Emzi0767.Common project
 //
-// Copyright 2019 Emzi0767
+// Copyright 2020 Emzi0767
 // 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,10 +14,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
+using System.Collections;
+using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Collections.ObjectModel;
 
-namespace System.Collections.Generic
+namespace Emzi0767
 {
     /// <summary>
     /// Represents collection of string keys and <typeparamref name="TValue"/> values, allowing the use of <see cref="ReadOnlySpan{T}"/> for dictionary operations.
