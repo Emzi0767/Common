@@ -8,7 +8,7 @@ This library is a collection of reusable components I use across my various proj
 unwelcome, you will need to provide me with a solid reason as to why your code should be included.
 
 ## Requirements
-The library is built for .NET Core 2.2, .NET Standard 2.0, and .NET Framework 4.5. It is unlikely I will ever support 
+The library is built for .NET Core 2.1+, .NET Standard 2.0, and .NET Framework 4.5. It is unlikely I will ever support 
 other targets, as these are the ones I use in my projects. I simply have no need to target older runtimes.
 
 ## Installation and usage
