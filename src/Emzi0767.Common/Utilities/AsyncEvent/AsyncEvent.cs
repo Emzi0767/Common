@@ -15,7 +15,7 @@
 // limitations under the License.
 
 using System;
-using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Threading.Tasks;
 
 namespace Emzi0767.Utilities
@@ -33,12 +33,12 @@ namespace Emzi0767.Utilities
         public string Name { get; }
 
         /// <summary>
-        /// Gets the maximum alloted execution time for all handlers. Any event which causes the handler to time out will raise a non-fatal <see cref="AsyncEventTimeoutException{TSender, TArgs}"/>.
+        /// Gets the maximum alloted execution time for all handlers. Any event which causes the handler to time out 
+        /// will raise a non-fatal <see cref="AsyncEventTimeoutException{TSender, TArgs}"/>.
         /// </summary>
         public TimeSpan MaximumExecutionTime { get; }
 
-        private readonly object _lock;
-        private readonly List<AsyncEventHandler<TSender, TArgs>> _handlers;
+        private ImmutableArray<AsyncEventHandler<TSender, TArgs>> _handlers;
         private readonly AsyncEventExceptionHandler<TSender, TArgs> _exceptionHandler;
 
         /// <summary>
@@ -49,8 +49,7 @@ namespace Emzi0767.Utilities
         /// <param name="exceptionHandler">Delegate which handles exceptions caused by this event.</param>
         public AsyncEvent(string name, TimeSpan maxExecutionTime, AsyncEventExceptionHandler<TSender, TArgs> exceptionHandler)
         {
-            this._lock = new object();
-            this._handlers = new List<AsyncEventHandler<TSender, TArgs>>();
+            this._handlers = ImmutableArray<AsyncEventHandler<TSender, TArgs>>.Empty;
             this._exceptionHandler = exceptionHandler;
 
             this.Name = name;
@@ -66,8 +65,7 @@ namespace Emzi0767.Utilities
             if (handler == null)
                 throw new ArgumentNullException(nameof(handler));
 
-            lock (this._lock)
-                this._handlers.Add(handler);
+            this._handlers = this._handlers.Add(handler);
         }
 
         /// <summary>
@@ -79,8 +77,7 @@ namespace Emzi0767.Utilities
             if (handler == null)
                 throw new ArgumentNullException(nameof(handler));
 
-            lock (this._lock)
-                this._handlers.Remove(handler);
+            this._handlers = this._handlers.Remove(handler);
         }
 
         /// <summary>
@@ -92,18 +89,14 @@ namespace Emzi0767.Utilities
         /// <returns></returns>
         public async Task InvokeAsync(TSender sender, TArgs e)
         {
-            AsyncEventHandler<TSender, TArgs>[] handlers;
-            lock (this._lock)
-                handlers = this._handlers.ToArray();
-
-            if (handlers.Length == 0)
+            if (this._handlers.Length == 0)
                 return;
 
             // If we have a timeout configured, start the timeout task
             var timeout = this.MaximumExecutionTime > TimeSpan.Zero ? Task.Delay(this.MaximumExecutionTime) : null;
-            for (var i = 0; i < handlers.Length; i++)
+            for (var i = 0; i < this._handlers.Length; i++)
             {
-                var handler = handlers[i];
+                var handler = this._handlers[i];
                 try
                 {
                     // Start the handler execution
@@ -118,14 +111,13 @@ namespace Emzi0767.Utilities
                         {
                             // Notify about the timeout and complete execution
                             timeout = null;
-                            this.HandleException(new AsyncEventTimeoutException<TSender, TArgs>(this, handler), handler, sender);
+                            this.HandleException(new AsyncEventTimeoutException<TSender, TArgs>(this, handler), handler, sender, e);
                             await handlerTask.ConfigureAwait(false);
                         }
                     }
                     else
                     {
                         // No timeout is configured, or timeout already expired, proceed as usual
-
                         await handlerTask.ConfigureAwait(false);
                     }
 
@@ -135,12 +127,12 @@ namespace Emzi0767.Utilities
                 catch (Exception ex)
                 {
                     e.Handled = false;
-                    this.HandleException(ex, handler, sender);
+                    this.HandleException(ex, handler, sender, e);
                 }
             }
         }
 
-        private void HandleException(Exception ex, AsyncEventHandler<TSender, TArgs> handler, TSender sender)
-            => this._exceptionHandler(this, ex, handler, sender);
+        private void HandleException(Exception ex, AsyncEventHandler<TSender, TArgs> handler, TSender sender, TArgs args)
+            => this._exceptionHandler(this, ex, handler, sender, args);
     }
 }
