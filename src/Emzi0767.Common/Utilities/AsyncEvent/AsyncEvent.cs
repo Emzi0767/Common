@@ -38,6 +38,7 @@ namespace Emzi0767.Utilities
         /// </summary>
         public TimeSpan MaximumExecutionTime { get; }
 
+        private readonly object _lock = new object();
         private ImmutableArray<AsyncEventHandler<TSender, TArgs>> _handlers;
         private readonly AsyncEventExceptionHandler<TSender, TArgs> _exceptionHandler;
 
@@ -65,7 +66,8 @@ namespace Emzi0767.Utilities
             if (handler == null)
                 throw new ArgumentNullException(nameof(handler));
 
-            this._handlers = this._handlers.Add(handler);
+            lock (this._lock)
+                this._handlers = this._handlers.Add(handler);
         }
 
         /// <summary>
@@ -77,7 +79,8 @@ namespace Emzi0767.Utilities
             if (handler == null)
                 throw new ArgumentNullException(nameof(handler));
 
-            this._handlers = this._handlers.Remove(handler);
+            lock (this._lock)
+                this._handlers = this._handlers.Remove(handler);
         }
 
         /// <summary>
@@ -89,14 +92,18 @@ namespace Emzi0767.Utilities
         /// <returns></returns>
         public async Task InvokeAsync(TSender sender, TArgs e)
         {
-            if (this._handlers.Length == 0)
+            ImmutableArray<AsyncEventHandler<TSender, TArgs>> handlers;
+            lock (this._lock)
+                handlers = this._handlers;
+
+            if (handlers.Length == 0)
                 return;
 
             // If we have a timeout configured, start the timeout task
             var timeout = this.MaximumExecutionTime > TimeSpan.Zero ? Task.Delay(this.MaximumExecutionTime) : null;
-            for (var i = 0; i < this._handlers.Length; i++)
+            for (var i = 0; i < handlers.Length; i++)
             {
-                var handler = this._handlers[i];
+                var handler = handlers[i];
                 try
                 {
                     // Start the handler execution
