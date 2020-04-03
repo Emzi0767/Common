@@ -21,6 +21,8 @@ namespace Emzi0767.Utilities
     /// <summary>
     /// Handles any exception raised by an <see cref="AsyncEvent{TSender, TArgs}"/> or its handlers.
     /// </summary>
+    /// <typeparam name="TSender">Type of the object that dispatches this event.</typeparam>
+    /// <typeparam name="TArgs">Type of the object which holds arguments for this event.</typeparam>
     /// <param name="asyncEvent">Asynchronous event which threw the exception.</param>
     /// <param name="exception">Exception that was thrown</param>
     /// <param name="handler">Handler which threw the exception.</param>

@@ -26,5 +26,5 @@ namespace Emzi0767.Utilities
     /// <param name="sender">Object which raised this event.</param>
     /// <param name="e">Arguments for this event.</param>
     /// <returns></returns>
-    public delegate Task AsyncEventHandler<TSender, TArgs>(TSender sender, TArgs e) where TArgs : AsyncEventArgs;
+    public delegate Task AsyncEventHandler<in TSender, in TArgs>(TSender sender, TArgs e) where TArgs : AsyncEventArgs;
 }
