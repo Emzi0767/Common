@@ -27,6 +27,7 @@ namespace Emzi0767.Common.Tests
         private AsyncExecutor Executor { get; } = new AsyncExecutor();
         private SecureRandom RNG { get; } = new SecureRandom();
         private AsyncEvent<AsyncEventTests, TestEventArgs> Event { get; }
+        private AsyncEvent<AsyncEventTests, TestEventArgs2> Event2 { get; }
 
         private event AsyncEventHandler<AsyncEventTests, TestEventArgs> TestEvent
         {
@@ -34,9 +35,16 @@ namespace Emzi0767.Common.Tests
             remove => this.Event.Unregister(value);
         }
 
+        private event AsyncEventHandler<AsyncEventTests, TestEventArgs2> TestEvent2
+        {
+            add => this.Event2.Register(value);
+            remove => this.Event2.Unregister(value);
+        }
+
         public AsyncEventTests()
         {
             this.Event = new AsyncEvent<AsyncEventTests, TestEventArgs>("TEST_EVENT", TimeSpan.FromSeconds(3), this.EventExceptionHandler);
+            this.Event2 = new AsyncEvent<AsyncEventTests, TestEventArgs2>("TEST_EVENT_2", TimeSpan.FromSeconds(3), this.EventExceptionHandler);
         }
 
         [TestMethod]
@@ -93,22 +101,45 @@ namespace Emzi0767.Common.Tests
                 => await Task.Delay(TimeSpan.FromSeconds(5));
         }
 
-        private void EventExceptionHandler(AsyncEvent<AsyncEventTests, TestEventArgs> @event, Exception exception, AsyncEventHandler<AsyncEventTests, TestEventArgs> faultingHandler, AsyncEventTests sender, TestEventArgs args)
+        [TestMethod]
+        public void TestVariance()
         {
-            if (exception is AsyncEventTimeoutException<AsyncEventTests, TestEventArgs>)
+            TestException test = null;
+
+            this.TestEvent2 += Handler;
+            this.Executor.Execute(this.Event2.InvokeAsync(this, new TestEventArgs2(ex => test = ex as TestException)));
+            this.TestEvent2 -= Handler;
+
+            Assert.IsNotNull(test);
+            Assert.IsInstanceOfType(test, typeof(TestException));
+
+            Task Handler(AsyncEventTests sender, TestEventArgs e)
+                => throw new TestException();
+        }
+
+        private void EventExceptionHandler<T1, T2>(AsyncEvent<T1, T2> @event, Exception exception, AsyncEventHandler<T1, T2> faultingHandler, T1 sender, T2 args)
+            where T2 : TestEventArgs
+        {
+            switch (exception)
             {
-                Assert.IsNotNull(args.Return);
-                args.Return(exception);
-                return;
+                case AsyncEventTimeoutException<AsyncEventTests, TestEventArgs> timeout:
+                    Assert.IsNotNull(args.Return);
+                    args.Return(timeout);
+                    return;
+
+                case TestException test:
+                    Assert.IsNotNull(test);
+                    args.Return(test);
+                    return;
             }
 
             Assert.Fail(exception.Message);
         }
 
-        private sealed class TestEventArgs : AsyncEventArgs
+        private class TestEventArgs : AsyncEventArgs
         {
-            public ulong Value { get; }
-            public Action<Exception> Return { get; }
+            public virtual ulong Value { get; }
+            public virtual Action<Exception> Return { get; }
 
             public TestEventArgs(ulong value, Action<Exception> @return)
             {
@@ -116,5 +147,17 @@ namespace Emzi0767.Common.Tests
                 this.Return = @return;
             }
         }
+
+        private class TestEventArgs2 : TestEventArgs
+        {
+            public override ulong Value => 42;
+
+            public TestEventArgs2(Action<Exception> @return)
+                : base(0, @return)
+            { }
+        }
+
+        private class TestException : Exception
+        { }
     }
 }
