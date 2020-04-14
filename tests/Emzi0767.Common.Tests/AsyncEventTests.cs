@@ -117,6 +117,212 @@ namespace Emzi0767.Common.Tests
                 => throw new TestException();
         }
 
+        [TestMethod]
+        public void TestThrowing()
+        {
+            this.TestEvent += Handler;
+            var aggregateEx = Assert.ThrowsException<AggregateException>(RunHandlers);
+            this.TestEvent -= Handler;
+
+            Assert.AreEqual(1, aggregateEx.InnerExceptions.Count);
+            Assert.IsInstanceOfType(aggregateEx.InnerExceptions[0], typeof(TestException));
+
+            Task Handler(AsyncEventTests sender, TestEventArgs e)
+                => throw new TestException();
+
+            void RunHandlers()
+            {
+                try
+                {
+                    this.Executor.Execute(this.Event.InvokeAsync(this, new TestEventArgs(420, ex => { }), AsyncEventExceptionMode.ThrowAllHandleAll));
+                }
+                catch
+                {
+                    throw;
+                }
+            }
+        }
+
+        [TestMethod]
+        public void TestExceptionModes()
+        {
+            AggregateException ex;
+            Exception ret;
+
+            // Fatal first
+            this.TestEvent += Handler1;
+
+            ret = null;
+            ex = Assert.ThrowsException<AggregateException>(() => RunHandlers(AsyncEventExceptionMode.ThrowAllHandleAll));
+            Assert.AreEqual(1, ex.InnerExceptions.Count);
+            Assert.IsInstanceOfType(ex.InnerException, typeof(TestException));
+            Assert.IsNotNull(ret);
+            Assert.IsInstanceOfType(ret, typeof(TestException));
+
+            ret = null;
+            ex = Assert.ThrowsException<AggregateException>(() => RunHandlers(AsyncEventExceptionMode.ThrowAll));
+            Assert.AreEqual(1, ex.InnerExceptions.Count);
+            Assert.IsInstanceOfType(ex.InnerException, typeof(TestException));
+            Assert.IsNull(ret);
+
+            ret = null;
+            ex = Assert.ThrowsException<AggregateException>(() => RunHandlers(AsyncEventExceptionMode.ThrowFatal));
+            Assert.AreEqual(1, ex.InnerExceptions.Count);
+            Assert.IsInstanceOfType(ex.InnerException, typeof(TestException));
+            Assert.IsNull(ret);
+
+            ret = null;
+            ex = Assert.ThrowsException<AggregateException>(() => RunHandlers(AsyncEventExceptionMode.ThrowFatal | AsyncEventExceptionMode.HandleAll));
+            Assert.AreEqual(1, ex.InnerExceptions.Count);
+            Assert.IsInstanceOfType(ex.InnerException, typeof(TestException));
+            Assert.IsNotNull(ret);
+            Assert.IsInstanceOfType(ret, typeof(TestException));
+
+            ret = null;
+            ex = Assert.ThrowsException<AggregateException>(() => RunHandlers(AsyncEventExceptionMode.ThrowFatal | AsyncEventExceptionMode.HandleFatal));
+            Assert.AreEqual(1, ex.InnerExceptions.Count);
+            Assert.IsInstanceOfType(ex.InnerException, typeof(TestException));
+            Assert.IsNotNull(ret);
+            Assert.IsInstanceOfType(ret, typeof(TestException));
+
+            ret = null;
+            ex = Assert.ThrowsException<AggregateException>(() => RunHandlers(AsyncEventExceptionMode.ThrowFatal | AsyncEventExceptionMode.HandleNonFatal));
+            Assert.AreEqual(1, ex.InnerExceptions.Count);
+            Assert.IsInstanceOfType(ex.InnerException, typeof(TestException));
+            Assert.IsNull(ret);
+
+            try
+            {
+                ret = null;
+                RunHandlers(AsyncEventExceptionMode.Default);
+                Assert.IsNotNull(ret);
+                Assert.IsInstanceOfType(ret, typeof(TestException));
+
+                ret = null;
+                RunHandlers(AsyncEventExceptionMode.ThrowNonFatal);
+                Assert.IsNull(ret);
+
+                ret = null;
+                RunHandlers(AsyncEventExceptionMode.ThrowNonFatal | AsyncEventExceptionMode.HandleAll);
+                Assert.IsNotNull(ret);
+                Assert.IsInstanceOfType(ret, typeof(TestException));
+
+                ret = null;
+                RunHandlers(AsyncEventExceptionMode.ThrowNonFatal | AsyncEventExceptionMode.HandleFatal);
+                Assert.IsNotNull(ret);
+                Assert.IsInstanceOfType(ret, typeof(TestException));
+
+                ret = null;
+                RunHandlers(AsyncEventExceptionMode.ThrowNonFatal | AsyncEventExceptionMode.HandleNonFatal);
+                Assert.IsNull(ret);
+            }
+            catch (AssertFailedException)
+            {
+                throw;
+            }
+            catch
+            {
+                Assert.Fail("Exception thrown where one should not have been thrown.");
+                throw;
+            }
+
+            this.TestEvent -= Handler1;
+
+            // Non-fatal next
+            this.TestEvent += Handler2;
+
+            ret = null;
+            ex = Assert.ThrowsException<AggregateException>(() => RunHandlers(AsyncEventExceptionMode.ThrowAllHandleAll));
+            Assert.AreEqual(1, ex.InnerExceptions.Count);
+            Assert.IsInstanceOfType(ex.InnerException, typeof(AsyncEventTimeoutException<AsyncEventTests, TestEventArgs>));
+            Assert.IsNotNull(ret);
+            Assert.IsInstanceOfType(ret, typeof(AsyncEventTimeoutException<AsyncEventTests, TestEventArgs>));
+
+            ret = null;
+            ex = Assert.ThrowsException<AggregateException>(() => RunHandlers(AsyncEventExceptionMode.ThrowAll));
+            Assert.AreEqual(1, ex.InnerExceptions.Count);
+            Assert.IsInstanceOfType(ex.InnerException, typeof(AsyncEventTimeoutException<AsyncEventTests, TestEventArgs>));
+            Assert.IsNull(ret);
+
+            ret = null;
+            ex = Assert.ThrowsException<AggregateException>(() => RunHandlers(AsyncEventExceptionMode.ThrowNonFatal));
+            Assert.AreEqual(1, ex.InnerExceptions.Count);
+            Assert.IsInstanceOfType(ex.InnerException, typeof(AsyncEventTimeoutException<AsyncEventTests, TestEventArgs>));
+            Assert.IsNull(ret);
+
+            ret = null;
+            ex = Assert.ThrowsException<AggregateException>(() => RunHandlers(AsyncEventExceptionMode.ThrowNonFatal | AsyncEventExceptionMode.HandleAll));
+            Assert.AreEqual(1, ex.InnerExceptions.Count);
+            Assert.IsInstanceOfType(ex.InnerException, typeof(AsyncEventTimeoutException<AsyncEventTests, TestEventArgs>));
+            Assert.IsNotNull(ret);
+            Assert.IsInstanceOfType(ret, typeof(AsyncEventTimeoutException<AsyncEventTests, TestEventArgs>));
+
+            ret = null;
+            ex = Assert.ThrowsException<AggregateException>(() => RunHandlers(AsyncEventExceptionMode.ThrowNonFatal | AsyncEventExceptionMode.HandleFatal));
+            Assert.AreEqual(1, ex.InnerExceptions.Count);
+            Assert.IsInstanceOfType(ex.InnerException, typeof(AsyncEventTimeoutException<AsyncEventTests, TestEventArgs>));
+            Assert.IsNull(ret);
+
+            ret = null;
+            ex = Assert.ThrowsException<AggregateException>(() => RunHandlers(AsyncEventExceptionMode.ThrowNonFatal | AsyncEventExceptionMode.HandleNonFatal));
+            Assert.AreEqual(1, ex.InnerExceptions.Count);
+            Assert.IsInstanceOfType(ex.InnerException, typeof(AsyncEventTimeoutException<AsyncEventTests, TestEventArgs>));
+            Assert.IsNotNull(ret);
+            Assert.IsInstanceOfType(ret, typeof(AsyncEventTimeoutException<AsyncEventTests, TestEventArgs>));
+
+
+            try
+            {
+                ret = null;
+                RunHandlers(AsyncEventExceptionMode.Default);
+                Assert.IsNotNull(ret);
+                Assert.IsInstanceOfType(ret, typeof(AsyncEventTimeoutException<AsyncEventTests, TestEventArgs>));
+
+                ret = null;
+                RunHandlers(AsyncEventExceptionMode.ThrowFatal);
+                Assert.IsNull(ret);
+
+                ret = null;
+                RunHandlers(AsyncEventExceptionMode.ThrowFatal | AsyncEventExceptionMode.HandleAll);
+                Assert.IsNotNull(ret);
+                Assert.IsInstanceOfType(ret, typeof(AsyncEventTimeoutException<AsyncEventTests, TestEventArgs>));
+
+                ret = null;
+                RunHandlers(AsyncEventExceptionMode.ThrowFatal | AsyncEventExceptionMode.HandleFatal);
+                Assert.IsNull(ret);
+
+                ret = null;
+                RunHandlers(AsyncEventExceptionMode.ThrowFatal | AsyncEventExceptionMode.HandleNonFatal);
+                Assert.IsNotNull(ret);
+                Assert.IsInstanceOfType(ret, typeof(AsyncEventTimeoutException<AsyncEventTests, TestEventArgs>));
+            }
+            catch
+            {
+                Assert.Fail("Exception thrown where one should not have been thrown.");
+                throw;
+            }
+
+            this.TestEvent -= Handler2;
+
+            Task Handler1(AsyncEventTests sender, TestEventArgs e)
+                => throw new TestException();
+
+            Task Handler2(AsyncEventTests sender, TestEventArgs e)
+                => Task.Delay(TimeSpan.FromSeconds(5));
+
+            void RunHandlers(AsyncEventExceptionMode exceptionMode)
+            {
+                try
+                {
+                    this.Executor.Execute(this.Event.InvokeAsync(this, new TestEventArgs(420, ex => ret = ex), exceptionMode));
+                }
+                catch
+                {
+                    throw;
+                }
+            }
+        }
+
         private void EventExceptionHandler<T1, T2>(AsyncEvent<T1, T2> @event, Exception exception, AsyncEventHandler<T1, T2> faultingHandler, T1 sender, T2 args)
             where T2 : TestEventArgs
         {

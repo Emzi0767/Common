@@ -46,7 +46,7 @@ namespace Emzi0767.Utilities
 
             // check for and rethrow any exceptions
             if (taskState.Exception != null)
-                throw new Exception("Exception occured while executing asynchronous code.", taskState.Exception);
+                throw taskState.Exception;
 
             // completion method
             void TaskCompletionHandler(Task t, object state)
@@ -56,9 +56,16 @@ namespace Emzi0767.Utilities
 
                 // retrieve any exceptions or cancellation status
                 if (t.IsFaulted)
-                    stateRef.Exception = t.Exception;
+                {
+                    if (t.Exception.InnerExceptions.Count == 1) // unwrap if 1
+                        stateRef.Exception = t.Exception.InnerException;
+                    else
+                        stateRef.Exception = t.Exception;
+                }
                 else if (t.IsCanceled)
+                {
                     stateRef.Exception = new TaskCanceledException(t);
+                }
 
                 // signal that the execution is done
                 stateRef.Lock.Set();
@@ -82,7 +89,7 @@ namespace Emzi0767.Utilities
 
             // check for and rethrow any exceptions
             if (taskState.Exception != null)
-                throw new Exception("Exception occured while executing asynchronous code.", taskState.Exception);
+                throw taskState.Exception;
 
             // return the result, if any
             if (taskState.HasResult)
@@ -99,9 +106,16 @@ namespace Emzi0767.Utilities
 
                 // retrieve any exceptions or cancellation status
                 if (t.IsFaulted)
-                    stateRef.Exception = t.Exception;
+                {
+                    if (t.Exception.InnerExceptions.Count == 1) // unwrap if 1
+                        stateRef.Exception = t.Exception.InnerException;
+                    else
+                        stateRef.Exception = t.Exception;
+                }
                 else if (t.IsCanceled)
+                {
                     stateRef.Exception = new TaskCanceledException(t);
+                }
 
                 // signal that the execution is done
                 stateRef.Lock.Set();

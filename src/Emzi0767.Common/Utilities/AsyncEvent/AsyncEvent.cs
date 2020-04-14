@@ -15,6 +15,7 @@
 // limitations under the License.
 
 using System;
+using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Threading.Tasks;
 
@@ -84,20 +85,31 @@ namespace Emzi0767.Utilities
         }
 
         /// <summary>
+        /// Unregisters all existing handlers from this event.
+        /// </summary>
+        public void UnregisterAll()
+        {
+            this._handlers = ImmutableArray<AsyncEventHandler<TSender, TArgs>>.Empty;
+        }
+
+        /// <summary>
         /// <para>Raises this event by invoking all of its registered handlers, in order of registration.</para>
         /// <para>All exceptions throw during invokation will be handled by the event's registered exception handler.</para>
         /// </summary>
         /// <param name="sender">Object which raised this event.</param>
         /// <param name="e">Arguments for this event.</param>
+        /// <param name="exceptionMode">Defines what to do with exceptions caught from handlers.</param>
         /// <returns></returns>
-        public async Task InvokeAsync(TSender sender, TArgs e)
+        public async Task InvokeAsync(TSender sender, TArgs e, AsyncEventExceptionMode exceptionMode = AsyncEventExceptionMode.Default)
         {
-            ImmutableArray<AsyncEventHandler<TSender, TArgs>> handlers;
-            lock (this._lock)
-                handlers = this._handlers;
-
+            var handlers = this._handlers;
             if (handlers.Length == 0)
                 return;
+
+            // Collect exceptions
+            List<Exception> exceptions = null;
+            if ((exceptionMode & AsyncEventExceptionMode.ThrowAll) != 0)
+                exceptions = new List<Exception>(handlers.Length * 2 /* timeout + regular */);
 
             // If we have a timeout configured, start the timeout task
             var timeout = this.MaximumExecutionTime > TimeSpan.Zero ? Task.Delay(this.MaximumExecutionTime) : null;
@@ -116,9 +128,16 @@ namespace Emzi0767.Utilities
                         var result = await Task.WhenAny(handlerTask, timeout).ConfigureAwait(false);
                         if (result == timeout)
                         {
-                            // Notify about the timeout and complete execution
                             timeout = null;
-                            this.HandleException(new AsyncEventTimeoutException<TSender, TArgs>(this, handler), handler, sender, e);
+                            var timeoutEx = new AsyncEventTimeoutException<TSender, TArgs>(this, handler);
+
+                            // Notify about the timeout and complete execution
+                            if ((exceptionMode & AsyncEventExceptionMode.HandleNonFatal) == AsyncEventExceptionMode.HandleNonFatal)
+                                this.HandleException(timeoutEx, handler, sender, e);
+
+                            if ((exceptionMode & AsyncEventExceptionMode.ThrowNonFatal) == AsyncEventExceptionMode.ThrowNonFatal)
+                                exceptions.Add(timeoutEx);
+
                             await handlerTask.ConfigureAwait(false);
                         }
                     }
@@ -134,12 +153,23 @@ namespace Emzi0767.Utilities
                 catch (Exception ex)
                 {
                     e.Handled = false;
-                    this.HandleException(ex, handler, sender, e);
+
+                    if ((exceptionMode & AsyncEventExceptionMode.HandleFatal) == AsyncEventExceptionMode.HandleFatal)
+                        this.HandleException(ex, handler, sender, e);
+
+                    if ((exceptionMode & AsyncEventExceptionMode.ThrowFatal) == AsyncEventExceptionMode.ThrowFatal)
+                        exceptions.Add(ex);
                 }
             }
+
+            if ((exceptionMode & AsyncEventExceptionMode.ThrowAll) != 0 && exceptions.Count > 0)
+                throw new AggregateException("Exceptions were thrown during execution of the event's handlers.", exceptions);
         }
 
         private void HandleException(Exception ex, AsyncEventHandler<TSender, TArgs> handler, TSender sender, TArgs args)
-            => this._exceptionHandler(this, ex, handler, sender, args);
+        {
+            if (this._exceptionHandler != null)
+                this._exceptionHandler(this, ex, handler, sender, args);
+        }
     }
 }

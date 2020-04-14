@@ -40,6 +40,9 @@ namespace Emzi0767.Common.Tests
             // Run a faulting void and test that it throws
             Assert.ThrowsException<Exception>(() => this.Executor.Execute(this.FaultingVoidAsync(x)));
             Assert.AreEqual(4, x.Instance);
+
+            // Run another faulting void and test that it throws
+            Assert.ThrowsException<InvalidOperationException>(() => this.Executor.Execute(this.FaultingVoid2Async()));
         }
 
         [TestMethod]
@@ -59,6 +62,9 @@ namespace Emzi0767.Common.Tests
             Assert.AreEqual(4, x.Instance);
             Assert.AreEqual(4, y.Instance);
             Assert.IsTrue(ReferenceEquals(x, y));
+
+            // Run another faulting type-returning task and test that it throws
+            Assert.ThrowsException<InvalidOperationException>(() => y = this.Executor.Execute(this.FaultingType2Async()));
         }
 
         [TestMethod]
@@ -67,14 +73,14 @@ namespace Emzi0767.Common.Tests
             using (var cts = new CancellationTokenSource())
             {
                 _ = Task.Delay(100).ContinueWith(t => cts.Cancel());
-                Assert.ThrowsException<Exception>(() => this.Executor.Execute(Task.Delay(500, cts.Token)));
+                Assert.ThrowsException<TaskCanceledException>(() => this.Executor.Execute(Task.Delay(500, cts.Token)));
             }
 
             // infinite wait?
             using (var cts = new CancellationTokenSource())
             {
                 _ = Task.Delay(100).ContinueWith(t => cts.Cancel());
-                Assert.ThrowsException<Exception>(() => this.Executor.Execute(Task.Delay(-1, cts.Token)));
+                Assert.ThrowsException<TaskCanceledException>(() => this.Executor.Execute(Task.Delay(-1, cts.Token)));
             }
 
             Assert.IsTrue(true, "Reached this point.");
@@ -115,6 +121,16 @@ namespace Emzi0767.Common.Tests
 #pragma warning restore 0162
         }
 
+        private async Task FaultingVoid2Async()
+        {
+            await Task.Yield();
+
+            await Task.Delay(500);
+
+            await Task.Delay(500);
+            throw new InvalidOperationException("Test exception.");
+        }
+
         private async Task<ByRef<int>> NonFaultingTypeAsync(ByRef<int> value)
         {
             await Task.Yield();
@@ -138,6 +154,14 @@ namespace Emzi0767.Common.Tests
             value.Instance *= 2;
             return value.Instance;
 #pragma warning restore 0162
+        }
+
+        private async Task<int> FaultingType2Async()
+        {
+            await Task.Yield();
+
+            await Task.Delay(1000);
+            throw new InvalidOperationException("Test exception.");
         }
     }
 }
