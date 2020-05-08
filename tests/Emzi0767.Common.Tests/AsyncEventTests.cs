@@ -48,6 +48,17 @@ namespace Emzi0767.Common.Tests
         }
 
         [TestMethod]
+        public void TestNullTasks()
+        {
+            this.TestEvent += Handler;
+            this.Executor.Execute(this.Event.InvokeAsync(this, new TestEventArgs(0, null)));
+            this.TestEvent -= Handler;
+
+            Task Handler(AsyncEventTests sender, TestEventArgs e)
+                => null;
+        }
+
+        [TestMethod]
         public void TestEventArgPropagation()
         {
             var value = this.RNG.GetUInt64();

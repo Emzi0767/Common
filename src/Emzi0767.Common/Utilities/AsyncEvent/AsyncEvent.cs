@@ -120,7 +120,7 @@ namespace Emzi0767.Utilities
                 {
                     // Start the handler execution
                     var handlerTask = handler(sender, e);
-                    if (timeout != null)
+                    if (handlerTask != null && timeout != null)
                     {
                         // If timeout is configured, wait for any task to finish
                         // If the timeout task finishes first, the handler is causing a timeout
@@ -141,7 +141,7 @@ namespace Emzi0767.Utilities
                             await handlerTask.ConfigureAwait(false);
                         }
                     }
-                    else
+                    else if (handlerTask != null)
                     {
                         // No timeout is configured, or timeout already expired, proceed as usual
                         await handlerTask.ConfigureAwait(false);
