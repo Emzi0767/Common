@@ -117,15 +117,15 @@ namespace Emzi0767.Utilities
                     stateRef.Exception = new TaskCanceledException(t);
                 }
 
-                // signal that the execution is done
-                stateRef.Lock.Set();
-
                 // return the result from the task, if any
-                if (t.IsCompleted)
+                if (t.IsCompleted && !t.IsFaulted)
                 {
                     stateRef.HasResult = true;
                     stateRef.Result = t.Result;
                 }
+
+                // signal that the execution is done
+                stateRef.Lock.Set();
             }
         }
 
