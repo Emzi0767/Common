@@ -15,6 +15,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "build", "build", "{70609DD1
 		build\oneclick-rebuild.ps1 = build\oneclick-rebuild.ps1
 		build\rebuild-all.ps1 = build\rebuild-all.ps1
 		build\rebuild-lib.ps1 = build\rebuild-lib.ps1
+		build\test-all.ps1 = build\test-all.ps1
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "meta", "meta", "{C8EDF7DC-EEAA-41C9-9BBA-A437DAD332D7}"
