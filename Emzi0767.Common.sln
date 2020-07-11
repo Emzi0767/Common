@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.28307.271
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.30225.117
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Emzi0767.Common", "src\Emzi0767.Common\Emzi0767.Common.csproj", "{C925E3DE-C33A-400C-8393-433E886EC682}"
 EndProject
@@ -28,13 +28,13 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "github", "github", "{680D4F
 	ProjectSection(SolutionItems) = preProject
 		.github\ISSUE_TEMPLATE\BUG_REPORT.MD = .github\ISSUE_TEMPLATE\BUG_REPORT.MD
 		.github\CODE_OF_CONDUCT.MD = .github\CODE_OF_CONDUCT.MD
-		.github\CONTIRUBTING.MD = .github\CONTIRUBTING.MD
+		.github\CONTRIBUTING.MD = .github\CONTRIBUTING.MD
 		.github\ISSUE_TEMPLATE\FEATURE_REQUEST.MD = .github\ISSUE_TEMPLATE\FEATURE_REQUEST.MD
 		.github\PULL_REQUEST_TEMPLATE.MD = .github\PULL_REQUEST_TEMPLATE.MD
 		.github\SUPPORT.MD = .github\SUPPORT.MD
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Emzi0767.Common.Tests", "tests\Emzi0767.Common.Tests\Emzi0767.Common.Tests.csproj", "{88F13AC5-55C3-4672-A3ED-545802948F1D}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Emzi0767.Common.Tests", "tests\Emzi0767.Common.Tests\Emzi0767.Common.Tests.csproj", "{88F13AC5-55C3-4672-A3ED-545802948F1D}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
