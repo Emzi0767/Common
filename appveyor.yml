@@ -29,6 +29,8 @@ build_script:
 
     # Build
     & .\build\rebuild-all.ps1 -ArtifactLocation "$dir" -Configuration "Release" -VersionSuffix "$BUILD_SUFFIX" -BuildNumber $BUILD_NUMBER 
+test_script:
+- ps: '& dotnet test -c Release'
 artifacts:
 - path: artifacts\*.nupkg
 deploy:
