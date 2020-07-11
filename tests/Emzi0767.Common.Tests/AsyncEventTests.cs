@@ -66,7 +66,11 @@ namespace Emzi0767.Common.Tests
             Task Handler(AsyncEventTests sender, TestEventArgs e)
             {
                 Assert.AreEqual(value, e.Value);
+#if NET45
+                return Task.Delay(0);
+#else
                 return Task.CompletedTask;
+#endif
             }
 
             this.TestEvent += Handler;
@@ -86,13 +90,21 @@ namespace Emzi0767.Common.Tests
             Task Handler1(AsyncEventTests sender, TestEventArgs e)
             {
                 e.Handled = true;
+#if NET45
+                return Task.Delay(0);
+#else
                 return Task.CompletedTask;
+#endif
             }
 
             Task Handler2(AsyncEventTests sender, TestEventArgs e)
             {
                 Assert.Fail("This handler should not have been invoked.");
+#if NET45
+                return Task.Delay(0);
+#else
                 return Task.CompletedTask;
+#endif
             }
         }
 
@@ -325,7 +337,7 @@ namespace Emzi0767.Common.Tests
             {
                 try
                 {
-                    this.Executor.Execute(this.Event.InvokeAsync(this, new TestEventArgs(420, ex => ret = ex), exceptionMode));
+                    this.Executor.Execute(this.Event.InvokeAsync(this, new TestEventArgs(420, _ex => ret = _ex), exceptionMode));
                 }
                 catch
                 {
