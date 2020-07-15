@@ -17,7 +17,10 @@
 using System;
 using System.Buffers;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 
 namespace Emzi0767.Types
 {
@@ -125,13 +128,53 @@ namespace Emzi0767.Types
         /// </summary>
         /// <param name="destination">Buffer to read the data from this buffer into.</param>
         /// <param name="source">Starting position in this buffer to read from.</param>
+        /// <param name="bytesWritten">Number of bytes written to the destination buffer.</param>
         /// <returns>Whether more data is available in this buffer.</returns>
-        public bool Read(Span<byte> destination, int source)
+        public bool Read(Span<byte> destination, ulong source, out int bytesWritten)
         {
+            bytesWritten = 0;
             if (this._isDisposed)
                 throw new InvalidOperationException("This buffer is disposed.");
 
-            return false;
+            if (source > this.Length)
+                throw new ArgumentOutOfRangeException(nameof(source), "Cannot copy data from beyond the buffer.");
+
+            // Find where to begin
+            var i = 0;
+            for (; i < this._segments.Count; i++)
+            {
+                var seg = this._segments[i];
+                var mem = seg.Memory;
+                if ((ulong)mem.Length > source)
+                    break;
+
+                source -= (ulong)mem.Length;
+            }
+
+            // Do actual copy
+            var sri = (int)source;
+            var dst = destination;
+            for (; i < this._segments.Count && dst.Length > 0; i++)
+            {
+                var seg = this._segments[i];
+                var mem = seg.Memory;
+                var src = mem.Span;
+
+                if (sri != 0)
+                {
+                    src = src.Slice(sri);
+                    sri = 0;
+                }
+
+                if (src.Length > dst.Length)
+                    src = src.Slice(0, dst.Length);
+
+                src.CopyTo(dst);
+                dst = dst.Slice(src.Length);
+                bytesWritten += src.Length;
+            }
+
+            return (this.Length - source) != (ulong)bytesWritten;
         }
 
         /// <summary>
@@ -143,9 +186,10 @@ namespace Emzi0767.Types
         /// <param name="start">Starting position in the target array to write to.</param>
         /// <param name="count">Maximum number of bytes to write to target array.</param>
         /// <param name="source">Starting position in this buffer to read from.</param>
+        /// <param name="bytesWritten">Number of bytes written to the destination buffer.</param>
         /// <returns>Whether more data is available in this buffer.</returns>
-        public bool Read(byte[] data, int start, int count, int source)
-            => this.Read(data.AsSpan(start, count), source);
+        public bool Read(byte[] data, int start, int count, ulong source, out int bytesWritten)
+            => this.Read(data.AsSpan(start, count), source, out bytesWritten);
 
         /// <summary>
         /// Reads data from this buffer to specified destination array slice. This method will write either as many 
@@ -154,8 +198,45 @@ namespace Emzi0767.Types
         /// </summary>
         /// <param name="data"></param>
         /// <param name="source"></param>
-        public bool Read(ArraySegment<byte> data, int source)
-            => this.Read(data.AsSpan(), source);
+        /// <param name="bytesWritten">Number of bytes written to the destination buffer.</param>
+        /// <returns>Whether more data is available in this buffer.</returns>
+        public bool Read(ArraySegment<byte> data, ulong source, out int bytesWritten)
+            => this.Read(data.AsSpan(), source, out bytesWritten);
+
+        /// <summary>
+        /// Converts this buffer into a single continuous byte array.
+        /// </summary>
+        /// <returns>Converted byte array.</returns>
+        public byte[] ToArray()
+        {
+            var bytes = new byte[this.Length];
+            this.Read(bytes, 0, out _);
+            return bytes;
+        }
+
+        /// <summary>
+        /// Copies all the data from this buffer to a stream.
+        /// </summary>
+        /// <param name="destination">Stream to copy this buffer's data to.</param>
+        public void CopyTo(Stream destination)
+        {
+#if HAS_SPAN_STREAM_OVERLOADS
+            foreach (var seg in this._segments)
+                destination.Write(seg.Memory.Span);
+#else
+            var longest = this._segments.Max(x => x.Memory.Length);
+            var buff = new byte[longest];
+
+            foreach (var seg in this._segments)
+            {
+                var mem = seg.Memory.Span;
+                var spn = buff.AsSpan(0, mem.Length);
+
+                mem.CopyTo(spn);
+                destination.Write(buff, 0, spn.Length);
+            }
+#endif
+        }
 
         /// <summary>
         /// Disposes of any resources claimed by this buffer.

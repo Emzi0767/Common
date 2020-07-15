@@ -15,6 +15,7 @@
 // limitations under the License.
 
 using System;
+using System.IO;
 using Emzi0767.Types;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -36,7 +37,7 @@ namespace Emzi0767.Common.Tests
         {
             var data = new byte[size];
             var datas = data.AsSpan();
-            this.RNG.GetBytes(data);
+            this.RNG.GetBytes(datas);
 
             using (var buff = new MemoryBuffer(segment))
             {
@@ -57,7 +58,7 @@ namespace Emzi0767.Common.Tests
         {
             var data = new byte[size];
             var datas = data.AsSpan();
-            this.RNG.GetBytes(data);
+            this.RNG.GetBytes(datas);
 
             using (var buff = new MemoryBuffer(segment))
             {
@@ -66,6 +67,88 @@ namespace Emzi0767.Common.Tests
 
                 Assert.IsTrue(buff.Capacity >= (ulong)size);
                 Assert.AreEqual((ulong)size, buff.Length);
+            }
+        }
+
+        [DataTestMethod]
+        [DataRow(128 * 1024, 8 * 1024)]
+        [DataRow(128 * 1024, 16 * 1024)]
+        [DataRow(128 * 1024, 64 * 1024)]
+        [DataRow(128 * 1024, 128 * 1024)]
+        public void TestArrayConversion(int size, int segment)
+        {
+            var data = new byte[size];
+            var datas = data.AsSpan();
+            this.RNG.GetBytes(datas);
+
+            using (var buff = new MemoryBuffer(segment))
+            {
+                buff.Write(datas);
+
+                Assert.IsTrue(buff.Capacity >= (ulong)size);
+                Assert.AreEqual((ulong)size, buff.Length);
+
+                var readout = buff.ToArray();
+                var readouts = readout.AsSpan();
+                Assert.AreEqual(size, readout.Length);
+                Assert.IsTrue(readouts.SequenceEqual(datas));
+            }
+        }
+
+        [DataTestMethod]
+        [DataRow(128 * 1024, 8 * 1024, 12 * 1024, 3UL * 1024)]
+        [DataRow(128 * 1024, 16 * 1024, 24 * 1024, 32UL * 1024)]
+        [DataRow(128 * 1024, 64 * 1024, 4 * 1024, 66UL * 1024)]
+        [DataRow(128 * 1024, 128 * 1024, 1 * 1024, 1UL * 1024)]
+        public void TestPartialReads(int size, int segment, int arraySize, ulong start)
+        {
+            var data = new byte[size];
+            var datas = data.AsSpan();
+            this.RNG.GetBytes(datas);
+
+            using (var buff = new MemoryBuffer(segment))
+            {
+                buff.Write(datas);
+
+                Assert.IsTrue(buff.Capacity >= (ulong)size);
+                Assert.AreEqual((ulong)size, buff.Length);
+
+                var readout = new byte[arraySize];
+                var readouts = readout.AsSpan();
+                buff.Read(readouts, start, out var written);
+                Assert.AreEqual(arraySize, written);
+                Assert.IsTrue(readouts.SequenceEqual(datas.Slice((int)start, arraySize)));
+            }
+        }
+
+        [DataTestMethod]
+        [DataRow(128 * 1024, 8 * 1024)]
+        [DataRow(128 * 1024, 16 * 1024)]
+        [DataRow(128 * 1024, 64 * 1024)]
+        [DataRow(128 * 1024, 128 * 1024)]
+        public void TestStreamWrite(int size, int segment)
+        {
+            var data = new byte[size];
+            var datas = data.AsSpan();
+            this.RNG.GetBytes(datas);
+
+            using (var buff = new MemoryBuffer(segment))
+            {
+                buff.Write(datas);
+
+                Assert.IsTrue(buff.Capacity >= (ulong)size);
+                Assert.AreEqual((ulong)size, buff.Length);
+
+                using (var ms = new MemoryStream())
+                {
+                    buff.CopyTo(ms);
+                    Assert.AreEqual((long)buff.Length, ms.Length);
+
+                    var readout = ms.ToArray();
+                    var readouts = readout.AsSpan();
+                    Assert.AreEqual(size, readout.Length);
+                    Assert.IsTrue(readouts.SequenceEqual(datas));
+                }
             }
         }
     }
