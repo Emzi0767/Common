@@ -125,7 +125,7 @@ namespace Emzi0767.Utilities
                         // If timeout is configured, wait for any task to finish
                         // If the timeout task finishes first, the handler is causing a timeout
 
-                        var result = await Task.WhenAny(handlerTask, timeout).ConfigureAwait(false);
+                        var result = await Task.WhenAny(timeout, handlerTask).ConfigureAwait(false);
                         if (result == timeout)
                         {
                             timeout = null;

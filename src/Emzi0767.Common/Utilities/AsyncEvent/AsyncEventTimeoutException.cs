@@ -42,7 +42,7 @@ namespace Emzi0767.Utilities
         /// <param name="asyncEvent">Event the execution of which timed out.</param>
         /// <param name="eventHandler">Handler which timed out.</param>
         public AsyncEventTimeoutException(AsyncEvent<TSender, TArgs> asyncEvent, AsyncEventHandler<TSender, TArgs> eventHandler)
-            : base("An event handler caused the invokation of asynchronous event to time out.")
+            : base("An event handler caused the invocation of an asynchronous event to time out.")
         {
             this.Event = asyncEvent;
             this.Handler = eventHandler;
