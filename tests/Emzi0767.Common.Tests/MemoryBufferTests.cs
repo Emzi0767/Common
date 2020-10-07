@@ -16,6 +16,8 @@
 
 using System;
 using System.IO;
+using System.IO.Compression;
+using System.Linq;
 using Emzi0767.Types;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -37,6 +39,7 @@ namespace Emzi0767.Common.Tests
         {
             var data = new byte[size];
             var datas = data.AsSpan();
+            var datat = new byte[size];
             this.RNG.GetBytes(datas);
 
             using (var buff = new MemoryBuffer(segment))
@@ -45,6 +48,11 @@ namespace Emzi0767.Common.Tests
 
                 Assert.IsTrue(buff.Capacity >= (ulong)size);
                 Assert.AreEqual((ulong)size, buff.Length);
+
+                buff.Read(datat, 0, out var written);
+
+                Assert.IsTrue(datat.AsSpan().SequenceEqual(datas));
+                Assert.AreEqual((ulong)written, buff.Length);
             }
         }
 
@@ -58,6 +66,7 @@ namespace Emzi0767.Common.Tests
         {
             var data = new byte[size];
             var datas = data.AsSpan();
+            var datat = new byte[size];
             this.RNG.GetBytes(datas);
 
             using (var buff = new MemoryBuffer(segment))
@@ -67,6 +76,11 @@ namespace Emzi0767.Common.Tests
 
                 Assert.IsTrue(buff.Capacity >= (ulong)size);
                 Assert.AreEqual((ulong)size, buff.Length);
+
+                buff.Read(datat, 0, out var written);
+
+                Assert.IsTrue(datat.AsSpan().SequenceEqual(datas));
+                Assert.AreEqual((ulong)written, buff.Length);
             }
         }
 
@@ -126,7 +140,7 @@ namespace Emzi0767.Common.Tests
         [DataRow(128 * 1024, 16 * 1024)]
         [DataRow(128 * 1024, 64 * 1024)]
         [DataRow(128 * 1024, 128 * 1024)]
-        public void TestStreamWrite(int size, int segment)
+        public void TestStreamCopy(int size, int segment)
         {
             var data = new byte[size];
             var datas = data.AsSpan();
@@ -145,6 +159,70 @@ namespace Emzi0767.Common.Tests
                     Assert.AreEqual((long)buff.Length, ms.Length);
 
                     var readout = ms.ToArray();
+                    var readouts = readout.AsSpan();
+                    Assert.AreEqual(size, readout.Length);
+                    Assert.IsTrue(readouts.SequenceEqual(datas));
+                }
+            }
+        }
+
+        [DataTestMethod]
+        [DataRow(128 * 1024, 8 * 1024)]
+        [DataRow(128 * 1024, 16 * 1024)]
+        [DataRow(128 * 1024, 64 * 1024)]
+        [DataRow(128 * 1024, 128 * 1024)]
+        public void TestStreamWrite(int size, int segment)
+        {
+            var data = new byte[size];
+            var datas = data.AsSpan();
+            this.RNG.GetBytes(datas);
+
+            using (var ms = new MemoryStream())
+            {
+                ms.Write(data, 0, data.Length);
+                ms.Position = 0;
+
+                using (var buff = new MemoryBuffer(segment))
+                {
+                    buff.Write(ms);
+
+                    Assert.AreEqual((long)buff.Length, ms.Length);
+
+                    var readout = buff.ToArray();
+                    var readouts = readout.AsSpan();
+                    Assert.AreEqual(size, readout.Length);
+                    Assert.IsTrue(readouts.SequenceEqual(datas));
+                }
+            }
+        }
+
+        [DataTestMethod]
+        [DataRow(128 * 1024, 8 * 1024)]
+        [DataRow(128 * 1024, 16 * 1024)]
+        [DataRow(128 * 1024, 64 * 1024)]
+        [DataRow(128 * 1024, 128 * 1024)]
+        public void TestUnseekableStreamWrite(int size, int segment)
+        {
+            var data = new byte[size];
+            var datas = data.AsSpan();
+            this.RNG.GetBytes(datas);
+
+            using (var ms = new MemoryStream())
+            {
+                using (var gzc = new GZipStream(ms, CompressionLevel.Optimal, true))
+                {
+                    gzc.Write(data, 0, data.Length);
+                    gzc.Flush();
+                }
+
+                ms.Position = 0;
+
+                using (var gzd = new GZipStream(ms, CompressionMode.Decompress, true))
+                using (var buff = new MemoryBuffer(segment))
+                {
+                    buff.Write(gzd);
+
+                    var readout = buff.ToArray();
                     var readouts = readout.AsSpan();
                     Assert.AreEqual(size, readout.Length);
                     Assert.IsTrue(readouts.SequenceEqual(datas));

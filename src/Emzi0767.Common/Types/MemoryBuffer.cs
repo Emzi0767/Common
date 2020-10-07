@@ -19,8 +19,6 @@ using System.Buffers;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
 
 namespace Emzi0767.Types
 {
@@ -90,8 +88,9 @@ namespace Emzi0767.Types
                 avs = avs > src.Length
                     ? src.Length
                     : avs;
+                var dmem = mem.Slice(this._lastSegmentLength);
 
-                src.Slice(0, avs).CopyTo(mem.Span);
+                src.Slice(0, avs).CopyTo(dmem.Span);
                 src = src.Slice(avs);
 
                 this.Length += (ulong)avs;
@@ -120,6 +119,75 @@ namespace Emzi0767.Types
         /// <param name="data">Array slice containing data to write.</param>
         public void Write(ArraySegment<byte> data)
             => this.Write(data.AsSpan());
+
+        /// <summary>
+        /// Appends data from a supplied stream to this buffer, growing it if necessary.
+        /// </summary>
+        /// <param name="stream">Stream to copy data from.</param>
+        public void Write(Stream stream)
+        {
+            if (this._isDisposed)
+                throw new InvalidOperationException("This buffer is disposed.");
+
+            if (stream.CanSeek)
+                this.WriteStreamSeekable(stream);
+            else
+                this.WriteStreamUnseekable(stream);
+        }
+
+        private void WriteStreamSeekable(Stream stream)
+        {
+            var len = (int)(stream.Length - stream.Position);
+            this.Grow(len);
+
+#if !HAS_SPAN_STREAM_OVERLOADS
+            var buff = new byte[this._segmentSize];
+#endif
+
+            while (this._segNo < this._segments.Count && len > 0)
+            {
+                var seg = this._segments[this._segNo];
+                var mem = seg.Memory;
+                var avs = mem.Length - this._lastSegmentLength;
+                avs = avs > len
+                    ? len
+                    : avs;
+                var dmem = mem.Slice(this._lastSegmentLength);
+
+#if HAS_SPAN_STREAM_OVERLOADS
+                stream.Read(dmem.Span);
+#else
+                var lsl = this._lastSegmentLength;
+                var slen = dmem.Span.Length - lsl;
+                stream.Read(buff, 0, slen);
+                buff.AsSpan(0, slen).CopyTo(dmem.Span);
+#endif
+                len -= dmem.Span.Length;
+
+                this.Length += (ulong)avs;
+                this._lastSegmentLength += avs;
+
+                if (this._lastSegmentLength == mem.Length)
+                {
+                    this._segNo++;
+                    this._lastSegmentLength = 0;
+                }
+            }
+        }
+
+        private void WriteStreamUnseekable(Stream stream)
+        {
+            var read = 0;
+#if HAS_SPAN_STREAM_OVERLOADS
+            Span<byte> buffs = stackalloc byte[this._segmentSize];
+            while ((read = stream.Read(buffs)) != 0)
+#else
+            var buff = new byte[this._segmentSize];
+            var buffs = buff.AsSpan();
+            while ((read = stream.Read(buff, 0, buff.Length - this._lastSegmentLength)) != 0)
+#endif
+                this.Write(buffs.Slice(0, read));
+        }
 
         /// <summary>
         /// Reads data from this buffer to the specified destination buffer. This method will write either as many 
