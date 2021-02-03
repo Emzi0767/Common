@@ -19,22 +19,46 @@ using System;
 namespace Emzi0767.Utilities
 {
     /// <summary>
+    /// ABC for <see cref="AsyncEventHandler{TSender, TArgs}"/>, allowing for using instances thereof without knowing the underlying instance's type parameters.
+    /// </summary>
+    public abstract class AsyncEventTimeoutException : Exception
+    {
+        /// <summary>
+        /// Gets the event the invocation of which caused the timeout.
+        /// </summary>
+        public AsyncEvent Event { get; }
+
+        /// <summary>
+        /// Gets the handler which caused the timeout.
+        /// </summary>
+        public AsyncEventHandler<object, AsyncEventArgs> Handler { get; }
+
+        private protected AsyncEventTimeoutException(AsyncEvent asyncEvent, AsyncEventHandler<object, AsyncEventArgs> eventHandler, string message)
+            : base(message)
+        {
+            this.Event = asyncEvent;
+            this.Handler = eventHandler;
+        }
+    }
+
+    /// <summary>
     /// <para>Thrown whenever execution of an <see cref="AsyncEventHandler{TSender, TArgs}"/> exceeds maximum time allowed.</para>
     /// <para>This is a non-fatal exception, used primarily to inform users that their code is taking too long to execute.</para>
     /// </summary>
     /// <typeparam name="TSender">Type of sender that dispatched this asynchronous event.</typeparam>
     /// <typeparam name="TArgs">Type of event arguments for the asynchronous event.</typeparam>
-    public class AsyncEventTimeoutException<TSender, TArgs> : Exception where TArgs : AsyncEventArgs
+    public class AsyncEventTimeoutException<TSender, TArgs> : AsyncEventTimeoutException
+        where TArgs : AsyncEventArgs
     {
         /// <summary>
-        /// Gets the event the invokation of which caused the timeout.
+        /// Gets the event the invocation of which caused the timeout.
         /// </summary>
-        public AsyncEvent<TSender, TArgs> Event { get; }
+        public new AsyncEvent<TSender, TArgs> Event => base.Event as AsyncEvent<TSender, TArgs>;
 
         /// <summary>
         /// Gets the handler which caused the timeout.
         /// </summary>
-        public AsyncEventHandler<TSender, TArgs> Handler { get; }
+        public new AsyncEventHandler<TSender, TArgs> Handler => base.Handler as AsyncEventHandler<TSender, TArgs>;
 
         /// <summary>
         /// Creates a new timeout exception for specified event and handler.
@@ -42,10 +66,7 @@ namespace Emzi0767.Utilities
         /// <param name="asyncEvent">Event the execution of which timed out.</param>
         /// <param name="eventHandler">Handler which timed out.</param>
         public AsyncEventTimeoutException(AsyncEvent<TSender, TArgs> asyncEvent, AsyncEventHandler<TSender, TArgs> eventHandler)
-            : base("An event handler caused the invocation of an asynchronous event to time out.")
-        {
-            this.Event = asyncEvent;
-            this.Handler = eventHandler;
-        }
+            : base(asyncEvent, eventHandler as AsyncEventHandler<object, AsyncEventArgs>, "An event handler caused the invocation of an asynchronous event to time out.")
+        { }
     }
 }

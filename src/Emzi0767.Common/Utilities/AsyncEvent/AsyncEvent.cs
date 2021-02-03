@@ -22,17 +22,29 @@ using System.Threading.Tasks;
 namespace Emzi0767.Utilities
 {
     /// <summary>
-    /// Implementation of asynchronous event. The handlers of such events are executed asynchronously, but sequentially.
+    /// ABC for <see cref="AsyncEvent{TSender, TArgs}"/>, allowing for using instances thereof without knowing the underlying instance's type parameters.
     /// </summary>
-    /// <typeparam name="TSender">Type of the object that dispatches this event.</typeparam>
-    /// <typeparam name="TArgs">Type of event argument object passed to this event's handlers.</typeparam>
-    public sealed class AsyncEvent<TSender, TArgs> where TArgs : AsyncEventArgs
+    public abstract class AsyncEvent
     {
         /// <summary>
         /// Gets the name of this event.
         /// </summary>
         public string Name { get; }
 
+        private protected AsyncEvent(string name)
+        {
+            this.Name = name;
+        }
+    }
+
+    /// <summary>
+    /// Implementation of asynchronous event. The handlers of such events are executed asynchronously, but sequentially.
+    /// </summary>
+    /// <typeparam name="TSender">Type of the object that dispatches this event.</typeparam>
+    /// <typeparam name="TArgs">Type of event argument object passed to this event's handlers.</typeparam>
+    public sealed class AsyncEvent<TSender, TArgs> : AsyncEvent
+        where TArgs : AsyncEventArgs
+    {
         /// <summary>
         /// Gets the maximum alloted execution time for all handlers. Any event which causes the handler to time out 
         /// will raise a non-fatal <see cref="AsyncEventTimeoutException{TSender, TArgs}"/>.
@@ -50,11 +62,11 @@ namespace Emzi0767.Utilities
         /// <param name="maxExecutionTime">Maximum handler execution time. A value of <see cref="TimeSpan.Zero"/> means infinite.</param>
         /// <param name="exceptionHandler">Delegate which handles exceptions caused by this event.</param>
         public AsyncEvent(string name, TimeSpan maxExecutionTime, AsyncEventExceptionHandler<TSender, TArgs> exceptionHandler)
+            : base(name)
         {
             this._handlers = ImmutableArray<AsyncEventHandler<TSender, TArgs>>.Empty;
             this._exceptionHandler = exceptionHandler;
 
-            this.Name = name;
             this.MaximumExecutionTime = maxExecutionTime;
         }
 
@@ -94,7 +106,7 @@ namespace Emzi0767.Utilities
 
         /// <summary>
         /// <para>Raises this event by invoking all of its registered handlers, in order of registration.</para>
-        /// <para>All exceptions throw during invokation will be handled by the event's registered exception handler.</para>
+        /// <para>All exceptions throw during invocation will be handled by the event's registered exception handler.</para>
         /// </summary>
         /// <param name="sender">Object which raised this event.</param>
         /// <param name="e">Arguments for this event.</param>
