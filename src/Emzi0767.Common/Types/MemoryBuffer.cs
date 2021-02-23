@@ -220,6 +220,7 @@ namespace Emzi0767.Types
             }
 
             // Do actual copy
+            var dl = (int)(this.Length - source);
             var sri = (int)source;
             var dst = destination;
             for (; i < this._segments.Count && dst.Length > 0; i++)
@@ -233,6 +234,9 @@ namespace Emzi0767.Types
                     src = src.Slice(sri);
                     sri = 0;
                 }
+
+                if (bytesWritten + src.Length > dl)
+                    src = src.Slice(0, dl - bytesWritten);
 
                 if (src.Length > dst.Length)
                     src = src.Slice(0, dst.Length);

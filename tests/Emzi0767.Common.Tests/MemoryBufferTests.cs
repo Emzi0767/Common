@@ -229,5 +229,54 @@ namespace Emzi0767.Common.Tests
                 }
             }
         }
+
+        [DataTestMethod]
+        [DataRow(1024, 512, 1024)]
+        [DataRow(1024, 512, 2048)]
+        [DataRow(2048, 1024, 1024)]
+        [DataRow(2048, 1536, 1024)]
+        public void TestReuse(int size1, int size2, int segment)
+        {
+            var data = new byte[size1];
+            var datas = data.AsSpan();
+            this.RNG.GetBytes(datas);
+
+            var readout = new byte[size1];
+
+            using (var ms = new MemoryStream())
+            {
+                ms.Write(data, 0, data.Length);
+                ms.Position = 0;
+
+                using (var buff = new MemoryBuffer(segment))
+                {
+                    buff.Write(ms);
+
+                    Assert.AreEqual((long)buff.Length, ms.Length);
+
+                    var readouts = readout.AsSpan();
+                    buff.Read(readout.AsSpan(), 0, out var written);
+                    Assert.AreEqual(size1, written);
+                    Assert.IsTrue(readouts.SequenceEqual(datas));
+                }
+
+                ms.Position = 0;
+                ms.SetLength(0);
+                ms.Write(data, 0, size2);
+                ms.Position = 0;
+
+                using (var buff = new MemoryBuffer(segment))
+                {
+                    buff.Write(ms);
+
+                    Assert.AreEqual((long)buff.Length, ms.Length);
+
+                    var readouts = readout.AsSpan();
+                    buff.Read(readout.AsSpan(), 0, out var written);
+                    Assert.AreEqual(size2, written);
+                    Assert.IsTrue(readouts.Slice(0, size2).SequenceEqual(datas.Slice(0, size2)));
+                }
+            }
+        }
     }
 }
