@@ -19,13 +19,16 @@ using System.Buffers;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 
 namespace Emzi0767.Types
 {
     /// <summary>
     /// Provides a resizable memory buffer, which can be read from and written to. It will automatically resize whenever required.
     /// </summary>
-    public sealed class MemoryBuffer : IDisposable
+    /// <typeparam name="T">Type of item to hold in the buffer.</typeparam>
+    public sealed class MemoryBuffer<T> : IDisposable where T : unmanaged
     {
         /// <summary>
         /// Gets the total capacity of this buffer. The capacity is the number of segments allocated, multiplied by size of individual segment.
@@ -37,13 +40,19 @@ namespace Emzi0767.Types
         /// </summary>
         public ulong Length { get; private set; }
 
+        /// <summary>
+        /// Gets the number of items currently written to the buffer. This number is equal to <see cref="Count"/> divided by size of <typeparamref name="T"/>.
+        /// </summary>
+        public ulong Count => this.Length / (ulong)this._itemSize;
+
         private readonly MemoryPool<byte> _pool;
         private readonly int _segmentSize;
         private int _lastSegmentLength;
         private int _segNo;
-        private bool _clear;
-        private List<IMemoryOwner<byte>> _segments;
+        private readonly bool _clear;
+        private readonly List<IMemoryOwner<byte>> _segments;
         private bool _isDisposed;
+        private readonly int _itemSize;
 
         /// <summary>
         /// Creates a new buffer with a specified segment size, specified number of initially-allocated segments, and supplied memory pool.
@@ -54,6 +63,10 @@ namespace Emzi0767.Types
         /// <param name="clearOnDispose">Determines whether the underlying buffers should be cleared on exit. If dealing with sensitive data, it might be a good idea to set this option to true.</param>
         public MemoryBuffer(int segmentSize = 65536, int initialSegmentCount = 0, MemoryPool<byte> memPool = default, bool clearOnDispose = false)
         {
+            this._itemSize = Unsafe.SizeOf<T>();
+            if (segmentSize % this._itemSize != 0)
+                throw new ArgumentException("Segment size must match size of individual item.");
+
             this._pool = memPool ?? MemoryPool<byte>.Shared;
 
             this._segmentSize = segmentSize;
@@ -72,14 +85,14 @@ namespace Emzi0767.Types
         /// Appends data from a supplied buffer to this buffer, growing it if necessary.
         /// </summary>
         /// <param name="data">Buffer containing data to write.</param>
-        public void Write(ReadOnlySpan<byte> data)
+        public void Write(ReadOnlySpan<T> data)
         {
             if (this._isDisposed)
                 throw new InvalidOperationException("This buffer is disposed.");
 
-            this.Grow(data.Length);
+            var src = MemoryMarshal.AsBytes(data);
+            this.Grow(src.Length);
 
-            var src = data;
             while (this._segNo < this._segments.Count && src.Length > 0)
             {
                 var seg = this._segments[this._segNo];
@@ -110,14 +123,14 @@ namespace Emzi0767.Types
         /// <param name="data">Array containing data to write.</param>
         /// <param name="start">Index from which to start reading the data.</param>
         /// <param name="count">Number of bytes to read from the source.</param>
-        public void Write(byte[] data, int start, int count)
+        public void Write(T[] data, int start, int count)
             => this.Write(data.AsSpan(start, count));
 
         /// <summary>
         /// Appends data from a supplied array slice to this buffer, growing it if necessary.
         /// </summary>
         /// <param name="data">Array slice containing data to write.</param>
-        public void Write(ArraySegment<byte> data)
+        public void Write(ArraySegment<T> data)
             => this.Write(data.AsSpan());
 
         /// <summary>
@@ -186,7 +199,7 @@ namespace Emzi0767.Types
             var buffs = buff.AsSpan();
             while ((read = stream.Read(buff, 0, buff.Length - this._lastSegmentLength)) != 0)
 #endif
-                this.Write(buffs.Slice(0, read));
+                this.Write(MemoryMarshal.Cast<byte, T>(buffs.Slice(0, read)));
         }
 
         /// <summary>
@@ -196,15 +209,16 @@ namespace Emzi0767.Types
         /// </summary>
         /// <param name="destination">Buffer to read the data from this buffer into.</param>
         /// <param name="source">Starting position in this buffer to read from.</param>
-        /// <param name="bytesWritten">Number of bytes written to the destination buffer.</param>
+        /// <param name="itemsWritten">Number of items written to the destination buffer.</param>
         /// <returns>Whether more data is available in this buffer.</returns>
-        public bool Read(Span<byte> destination, ulong source, out int bytesWritten)
+        public bool Read(Span<T> destination, ulong source, out int itemsWritten)
         {
-            bytesWritten = 0;
+            source *= (ulong)this._itemSize;
+            itemsWritten = 0;
             if (this._isDisposed)
                 throw new InvalidOperationException("This buffer is disposed.");
 
-            if (source > this.Length)
+            if (source > this.Count)
                 throw new ArgumentOutOfRangeException(nameof(source), "Cannot copy data from beyond the buffer.");
 
             // Find where to begin
@@ -222,7 +236,7 @@ namespace Emzi0767.Types
             // Do actual copy
             var dl = (int)(this.Length - source);
             var sri = (int)source;
-            var dst = destination;
+            var dst = MemoryMarshal.AsBytes(destination);
             for (; i < this._segments.Count && dst.Length > 0; i++)
             {
                 var seg = this._segments[i];
@@ -235,18 +249,19 @@ namespace Emzi0767.Types
                     sri = 0;
                 }
 
-                if (bytesWritten + src.Length > dl)
-                    src = src.Slice(0, dl - bytesWritten);
+                if (itemsWritten + src.Length > dl)
+                    src = src.Slice(0, dl - itemsWritten);
 
                 if (src.Length > dst.Length)
                     src = src.Slice(0, dst.Length);
 
                 src.CopyTo(dst);
                 dst = dst.Slice(src.Length);
-                bytesWritten += src.Length;
+                itemsWritten += src.Length;
             }
 
-            return (this.Length - source) != (ulong)bytesWritten;
+            itemsWritten /= this._itemSize;
+            return (this.Length - source) != (ulong)itemsWritten;
         }
 
         /// <summary>
@@ -258,10 +273,10 @@ namespace Emzi0767.Types
         /// <param name="start">Starting position in the target array to write to.</param>
         /// <param name="count">Maximum number of bytes to write to target array.</param>
         /// <param name="source">Starting position in this buffer to read from.</param>
-        /// <param name="bytesWritten">Number of bytes written to the destination buffer.</param>
+        /// <param name="itemsWritten">Number of items written to the destination buffer.</param>
         /// <returns>Whether more data is available in this buffer.</returns>
-        public bool Read(byte[] data, int start, int count, ulong source, out int bytesWritten)
-            => this.Read(data.AsSpan(start, count), source, out bytesWritten);
+        public bool Read(T[] data, int start, int count, ulong source, out int itemsWritten)
+            => this.Read(data.AsSpan(start, count), source, out itemsWritten);
 
         /// <summary>
         /// Reads data from this buffer to specified destination array slice. This method will write either as many 
@@ -270,18 +285,18 @@ namespace Emzi0767.Types
         /// </summary>
         /// <param name="data"></param>
         /// <param name="source"></param>
-        /// <param name="bytesWritten">Number of bytes written to the destination buffer.</param>
+        /// <param name="itemsWritten">Number of items written to the destination buffer.</param>
         /// <returns>Whether more data is available in this buffer.</returns>
-        public bool Read(ArraySegment<byte> data, ulong source, out int bytesWritten)
-            => this.Read(data.AsSpan(), source, out bytesWritten);
+        public bool Read(ArraySegment<T> data, ulong source, out int itemsWritten)
+            => this.Read(data.AsSpan(), source, out itemsWritten);
 
         /// <summary>
         /// Converts this buffer into a single continuous byte array.
         /// </summary>
         /// <returns>Converted byte array.</returns>
-        public byte[] ToArray()
+        public T[] ToArray()
         {
-            var bytes = new byte[this.Length];
+            var bytes = new T[this.Count];
             this.Read(bytes, 0, out _);
             return bytes;
         }

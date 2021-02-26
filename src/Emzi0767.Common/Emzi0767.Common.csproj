@@ -22,7 +22,7 @@
   <PropertyGroup>
     <AssemblyName>Emzi0767.Common</AssemblyName>
     <RootNamespace>Emzi0767</RootNamespace>
-    <VersionPrefix>2.4.1</VersionPrefix>
+    <VersionPrefix>2.5.0</VersionPrefix>
     <LangVersion>8.0</LangVersion>
     <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
     <Optimize>True</Optimize>
