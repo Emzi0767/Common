@@ -30,21 +30,40 @@ namespace Emzi0767.Common.Tests
     {
         private SecureRandom RNG { get; } = new SecureRandom();
 
+        private const int BufferStandard = 0;
+        private const int BufferContinuous = 1;
+
+        private static IMemoryBuffer<T> CreateMemoryBuffer<T>(int type, int size)
+            where T : unmanaged
+            => type switch
+            {
+                BufferStandard => new MemoryBuffer<T>(size),
+                BufferContinuous => new ContinuousMemoryBuffer<T>(size),
+
+                _ => null
+            };
+
         [DataTestMethod]
-        [DataRow(32 * 1024, 16 * 1024)]
-        [DataRow(32 * 1024, 32 * 1024)]
-        [DataRow(32 * 1024, 64 * 1024)]
-        [DataRow(16 * 1024, 64 * 1024)]
-        [DataRow(128 * 1024, 64 * 1024)]
-        [DataRow(512 * 1024, 64 * 1024)]
-        public void TestStraightWrite(int size, int segment)
+        [DataRow(32 * 1024, 16 * 1024, BufferStandard)]
+        [DataRow(32 * 1024, 32 * 1024, BufferStandard)]
+        [DataRow(32 * 1024, 64 * 1024, BufferStandard)]
+        [DataRow(16 * 1024, 64 * 1024, BufferStandard)]
+        [DataRow(128 * 1024, 64 * 1024, BufferStandard)]
+        [DataRow(512 * 1024, 64 * 1024, BufferStandard)]
+        [DataRow(32 * 1024, 16 * 1024, BufferContinuous)]
+        [DataRow(32 * 1024, 32 * 1024, BufferContinuous)]
+        [DataRow(32 * 1024, 64 * 1024, BufferContinuous)]
+        [DataRow(16 * 1024, 64 * 1024, BufferContinuous)]
+        [DataRow(128 * 1024, 64 * 1024, BufferContinuous)]
+        [DataRow(512 * 1024, 64 * 1024, BufferContinuous)]
+        public void TestStraightWrite(int size, int segment, int type)
         {
             var data = new byte[size];
             var datas = data.AsSpan();
             var datat = new byte[size];
             this.RNG.GetBytes(datas);
 
-            using var buff = new MemoryBuffer<byte>(segment);
+            using var buff = CreateMemoryBuffer<byte>(type, segment);
             buff.Write(datas);
 
             Assert.IsTrue(buff.Capacity >= (ulong)size);
@@ -57,19 +76,24 @@ namespace Emzi0767.Common.Tests
         }
 
         [DataTestMethod]
-        [DataRow(128 * 1024, 16 * 1024, 16)]
-        [DataRow(128 * 1024, 16 * 1024, 384)]
-        [DataRow(128 * 1024, 16 * 1024, 512)]
-        [DataRow(128 * 1024, 16 * 1024, 1024)]
-        [DataRow(128 * 1024, 16 * 1024, 4096)]
-        public void TestPartialWrite(int size, int segment, int chunk)
+        [DataRow(128 * 1024, 16 * 1024, 16, BufferStandard)]
+        [DataRow(128 * 1024, 16 * 1024, 384, BufferStandard)]
+        [DataRow(128 * 1024, 16 * 1024, 512, BufferStandard)]
+        [DataRow(128 * 1024, 16 * 1024, 1024, BufferStandard)]
+        [DataRow(128 * 1024, 16 * 1024, 4096, BufferStandard)]
+        [DataRow(128 * 1024, 16 * 1024, 16, BufferContinuous)]
+        [DataRow(128 * 1024, 16 * 1024, 384, BufferContinuous)]
+        [DataRow(128 * 1024, 16 * 1024, 512, BufferContinuous)]
+        [DataRow(128 * 1024, 16 * 1024, 1024, BufferContinuous)]
+        [DataRow(128 * 1024, 16 * 1024, 4096, BufferContinuous)]
+        public void TestPartialWrite(int size, int segment, int chunk, int type)
         {
             var data = new byte[size];
             var datas = data.AsSpan();
             var datat = new byte[size];
             this.RNG.GetBytes(datas);
 
-            using var buff = new MemoryBuffer<byte>(segment);
+            using var buff = CreateMemoryBuffer<byte>(type, segment);
             for (var i = 0; i < size; i += chunk)
                 buff.Write(datas.Slice(i, Math.Min(chunk, datas.Length - i)));
 
@@ -83,17 +107,21 @@ namespace Emzi0767.Common.Tests
         }
 
         [DataTestMethod]
-        [DataRow(128 * 1024, 8 * 1024)]
-        [DataRow(128 * 1024, 16 * 1024)]
-        [DataRow(128 * 1024, 64 * 1024)]
-        [DataRow(128 * 1024, 128 * 1024)]
-        public void TestArrayConversion(int size, int segment)
+        [DataRow(128 * 1024, 8 * 1024, BufferStandard)]
+        [DataRow(128 * 1024, 16 * 1024, BufferStandard)]
+        [DataRow(128 * 1024, 64 * 1024, BufferStandard)]
+        [DataRow(128 * 1024, 128 * 1024, BufferStandard)]
+        [DataRow(128 * 1024, 8 * 1024, BufferContinuous)]
+        [DataRow(128 * 1024, 16 * 1024, BufferContinuous)]
+        [DataRow(128 * 1024, 64 * 1024, BufferContinuous)]
+        [DataRow(128 * 1024, 128 * 1024, BufferContinuous)]
+        public void TestArrayConversion(int size, int segment, int type)
         {
             var data = new byte[size];
             var datas = data.AsSpan();
             this.RNG.GetBytes(datas);
 
-            using var buff = new MemoryBuffer<byte>(segment);
+            using var buff = CreateMemoryBuffer<byte>(type, segment);
             buff.Write(datas);
 
             Assert.IsTrue(buff.Capacity >= (ulong)size);
@@ -106,17 +134,21 @@ namespace Emzi0767.Common.Tests
         }
 
         [DataTestMethod]
-        [DataRow(128 * 1024, 8 * 1024, 12 * 1024, 3UL * 1024)]
-        [DataRow(128 * 1024, 16 * 1024, 24 * 1024, 32UL * 1024)]
-        [DataRow(128 * 1024, 64 * 1024, 4 * 1024, 66UL * 1024)]
-        [DataRow(128 * 1024, 128 * 1024, 1 * 1024, 1UL * 1024)]
-        public void TestPartialReads(int size, int segment, int arraySize, ulong start)
+        [DataRow(128 * 1024, 8 * 1024, 12 * 1024, 3UL * 1024, BufferStandard)]
+        [DataRow(128 * 1024, 16 * 1024, 24 * 1024, 32UL * 1024, BufferStandard)]
+        [DataRow(128 * 1024, 64 * 1024, 4 * 1024, 66UL * 1024, BufferStandard)]
+        [DataRow(128 * 1024, 128 * 1024, 1 * 1024, 1UL * 1024, BufferStandard)]
+        [DataRow(128 * 1024, 8 * 1024, 12 * 1024, 3UL * 1024, BufferContinuous)]
+        [DataRow(128 * 1024, 16 * 1024, 24 * 1024, 32UL * 1024, BufferContinuous)]
+        [DataRow(128 * 1024, 64 * 1024, 4 * 1024, 66UL * 1024, BufferContinuous)]
+        [DataRow(128 * 1024, 128 * 1024, 1 * 1024, 1UL * 1024, BufferContinuous)]
+        public void TestPartialReads(int size, int segment, int arraySize, ulong start, int type)
         {
             var data = new byte[size];
             var datas = data.AsSpan();
             this.RNG.GetBytes(datas);
 
-            using var buff = new MemoryBuffer<byte>(segment);
+            using var buff = CreateMemoryBuffer<byte>(type, segment);
             buff.Write(datas);
 
             Assert.IsTrue(buff.Capacity >= (ulong)size);
@@ -130,17 +162,21 @@ namespace Emzi0767.Common.Tests
         }
 
         [DataTestMethod]
-        [DataRow(128 * 1024, 8 * 1024)]
-        [DataRow(128 * 1024, 16 * 1024)]
-        [DataRow(128 * 1024, 64 * 1024)]
-        [DataRow(128 * 1024, 128 * 1024)]
-        public void TestStreamCopy(int size, int segment)
+        [DataRow(128 * 1024, 8 * 1024, BufferStandard)]
+        [DataRow(128 * 1024, 16 * 1024, BufferStandard)]
+        [DataRow(128 * 1024, 64 * 1024, BufferStandard)]
+        [DataRow(128 * 1024, 128 * 1024, BufferStandard)]
+        [DataRow(128 * 1024, 8 * 1024, BufferContinuous)]
+        [DataRow(128 * 1024, 16 * 1024, BufferContinuous)]
+        [DataRow(128 * 1024, 64 * 1024, BufferContinuous)]
+        [DataRow(128 * 1024, 128 * 1024, BufferContinuous)]
+        public void TestStreamCopy(int size, int segment, int type)
         {
             var data = new byte[size];
             var datas = data.AsSpan();
             this.RNG.GetBytes(datas);
 
-            using var buff = new MemoryBuffer<byte>(segment);
+            using var buff = CreateMemoryBuffer<byte>(type, segment);
             buff.Write(datas);
 
             Assert.IsTrue(buff.Capacity >= (ulong)size);
@@ -157,11 +193,15 @@ namespace Emzi0767.Common.Tests
         }
 
         [DataTestMethod]
-        [DataRow(128 * 1024, 8 * 1024)]
-        [DataRow(128 * 1024, 16 * 1024)]
-        [DataRow(128 * 1024, 64 * 1024)]
-        [DataRow(128 * 1024, 128 * 1024)]
-        public void TestStreamWrite(int size, int segment)
+        [DataRow(128 * 1024, 8 * 1024, BufferStandard)]
+        [DataRow(128 * 1024, 16 * 1024, BufferStandard)]
+        [DataRow(128 * 1024, 64 * 1024, BufferStandard)]
+        [DataRow(128 * 1024, 128 * 1024, BufferStandard)]
+        [DataRow(128 * 1024, 8 * 1024, BufferContinuous)]
+        [DataRow(128 * 1024, 16 * 1024, BufferContinuous)]
+        [DataRow(128 * 1024, 64 * 1024, BufferContinuous)]
+        [DataRow(128 * 1024, 128 * 1024, BufferContinuous)]
+        public void TestStreamWrite(int size, int segment, int type)
         {
             var data = new byte[size];
             var datas = data.AsSpan();
@@ -171,7 +211,7 @@ namespace Emzi0767.Common.Tests
             ms.Write(data, 0, data.Length);
             ms.Position = 0;
 
-            using var buff = new MemoryBuffer<byte>(segment);
+            using var buff = CreateMemoryBuffer<byte>(type, segment);
             buff.Write(ms);
 
             Assert.AreEqual((long)buff.Length, ms.Length);
@@ -183,11 +223,15 @@ namespace Emzi0767.Common.Tests
         }
 
         [DataTestMethod]
-        [DataRow(128 * 1024, 8 * 1024)]
-        [DataRow(128 * 1024, 16 * 1024)]
-        [DataRow(128 * 1024, 64 * 1024)]
-        [DataRow(128 * 1024, 128 * 1024)]
-        public void TestUnseekableStreamWrite(int size, int segment)
+        [DataRow(128 * 1024, 8 * 1024, BufferStandard)]
+        [DataRow(128 * 1024, 16 * 1024, BufferStandard)]
+        [DataRow(128 * 1024, 64 * 1024, BufferStandard)]
+        [DataRow(128 * 1024, 128 * 1024, BufferStandard)]
+        [DataRow(128 * 1024, 8 * 1024, BufferContinuous)]
+        [DataRow(128 * 1024, 16 * 1024, BufferContinuous)]
+        [DataRow(128 * 1024, 64 * 1024, BufferContinuous)]
+        [DataRow(128 * 1024, 128 * 1024, BufferContinuous)]
+        public void TestUnseekableStreamWrite(int size, int segment, int type)
         {
             var data = new byte[size];
             var datas = data.AsSpan();
@@ -203,7 +247,7 @@ namespace Emzi0767.Common.Tests
             ms.Position = 0;
 
             using var gzd = new GZipStream(ms, CompressionMode.Decompress, true);
-            using var buff = new MemoryBuffer<byte>(segment);
+            using var buff = CreateMemoryBuffer<byte>(type, segment);
             buff.Write(gzd);
 
             var readout = buff.ToArray();
@@ -213,11 +257,15 @@ namespace Emzi0767.Common.Tests
         }
 
         [DataTestMethod]
-        [DataRow(1024, 512, 1024)]
-        [DataRow(1024, 512, 2048)]
-        [DataRow(2048, 1024, 1024)]
-        [DataRow(2048, 1536, 1024)]
-        public void TestReuse(int size1, int size2, int segment)
+        [DataRow(1024, 512, 1024, BufferStandard)]
+        [DataRow(1024, 512, 2048, BufferStandard)]
+        [DataRow(2048, 1024, 1024, BufferStandard)]
+        [DataRow(2048, 1536, 1024, BufferStandard)]
+        [DataRow(1024, 512, 1024, BufferContinuous)]
+        [DataRow(1024, 512, 2048, BufferContinuous)]
+        [DataRow(2048, 1024, 1024, BufferContinuous)]
+        [DataRow(2048, 1536, 1024, BufferContinuous)]
+        public void TestReuse(int size1, int size2, int segment, int type)
         {
             var data = new byte[size1];
             var datas = data.AsSpan();
@@ -229,7 +277,7 @@ namespace Emzi0767.Common.Tests
             ms.Write(data, 0, data.Length);
             ms.Position = 0;
 
-            using (var buff = new MemoryBuffer<byte>(segment))
+            using (var buff = CreateMemoryBuffer<byte>(type, segment))
             {
                 buff.Write(ms);
 
@@ -246,7 +294,7 @@ namespace Emzi0767.Common.Tests
             ms.Write(data, 0, size2);
             ms.Position = 0;
 
-            using (var buff = new MemoryBuffer<byte>(segment))
+            using (var buff = CreateMemoryBuffer<byte>(type, segment))
             {
                 buff.Write(ms);
 
@@ -260,17 +308,21 @@ namespace Emzi0767.Common.Tests
         }
 
         [DataTestMethod]
-        [DataRow(128 * 1024, 8 * 1024)]
-        [DataRow(128 * 1024, 16 * 1024)]
-        [DataRow(128 * 1024, 64 * 1024)]
-        [DataRow(128 * 1024, 128 * 1024)]
-        public void TestArrayConversionI16(int size, int segment)
+        [DataRow(128 * 1024, 8 * 1024, BufferStandard)]
+        [DataRow(128 * 1024, 16 * 1024, BufferStandard)]
+        [DataRow(128 * 1024, 64 * 1024, BufferStandard)]
+        [DataRow(128 * 1024, 128 * 1024, BufferStandard)]
+        [DataRow(128 * 1024, 8 * 1024, BufferContinuous)]
+        [DataRow(128 * 1024, 16 * 1024, BufferContinuous)]
+        [DataRow(128 * 1024, 64 * 1024, BufferContinuous)]
+        [DataRow(128 * 1024, 128 * 1024, BufferContinuous)]
+        public void TestArrayConversionI16(int size, int segment, int type)
         {
             var data = new short[size];
             var datas = data.AsSpan();
             this.RNG.GetBytes(MemoryMarshal.AsBytes(datas));
 
-            using var buff = new MemoryBuffer<short>(segment);
+            using var buff = CreateMemoryBuffer<short>(type, segment);
             buff.Write(datas);
 
             Assert.IsTrue(buff.Capacity >= (ulong)size);
@@ -283,17 +335,21 @@ namespace Emzi0767.Common.Tests
         }
 
         [DataTestMethod]
-        [DataRow(128 * 1024, 8 * 1024)]
-        [DataRow(128 * 1024, 16 * 1024)]
-        [DataRow(128 * 1024, 64 * 1024)]
-        [DataRow(128 * 1024, 128 * 1024)]
-        public void TestArrayConversionI32(int size, int segment)
+        [DataRow(128 * 1024, 8 * 1024, BufferStandard)]
+        [DataRow(128 * 1024, 16 * 1024, BufferStandard)]
+        [DataRow(128 * 1024, 64 * 1024, BufferStandard)]
+        [DataRow(128 * 1024, 128 * 1024, BufferStandard)]
+        [DataRow(128 * 1024, 8 * 1024, BufferContinuous)]
+        [DataRow(128 * 1024, 16 * 1024, BufferContinuous)]
+        [DataRow(128 * 1024, 64 * 1024, BufferContinuous)]
+        [DataRow(128 * 1024, 128 * 1024, BufferContinuous)]
+        public void TestArrayConversionI32(int size, int segment, int type)
         {
             var data = new int[size];
             var datas = data.AsSpan();
             this.RNG.GetBytes(MemoryMarshal.AsBytes(datas));
 
-            using var buff = new MemoryBuffer<int>(segment);
+            using var buff = CreateMemoryBuffer<int>(type, segment);
             buff.Write(datas);
 
             Assert.IsTrue(buff.Capacity >= (ulong)size);
@@ -306,17 +362,21 @@ namespace Emzi0767.Common.Tests
         }
 
         [DataTestMethod]
-        [DataRow(128 * 1024, 8 * 1024)]
-        [DataRow(128 * 1024, 16 * 1024)]
-        [DataRow(128 * 1024, 64 * 1024)]
-        [DataRow(128 * 1024, 128 * 1024)]
-        public void TestArrayConversionI64(int size, int segment)
+        [DataRow(128 * 1024, 8 * 1024, BufferStandard)]
+        [DataRow(128 * 1024, 16 * 1024, BufferStandard)]
+        [DataRow(128 * 1024, 64 * 1024, BufferStandard)]
+        [DataRow(128 * 1024, 128 * 1024, BufferStandard)]
+        [DataRow(128 * 1024, 8 * 1024, BufferContinuous)]
+        [DataRow(128 * 1024, 16 * 1024, BufferContinuous)]
+        [DataRow(128 * 1024, 64 * 1024, BufferContinuous)]
+        [DataRow(128 * 1024, 128 * 1024, BufferContinuous)]
+        public void TestArrayConversionI64(int size, int segment, int type)
         {
             var data = new long[size];
             var datas = data.AsSpan();
             this.RNG.GetBytes(MemoryMarshal.AsBytes(datas));
 
-            using var buff = new MemoryBuffer<long>(segment);
+            using var buff = CreateMemoryBuffer<long>(type, segment);
             buff.Write(datas);
 
             Assert.IsTrue(buff.Capacity >= (ulong)size);
@@ -329,17 +389,21 @@ namespace Emzi0767.Common.Tests
         }
 
         [DataTestMethod]
-        [DataRow(128 * 1024, 8 * 1024)]
-        [DataRow(128 * 1024, 16 * 1024)]
-        [DataRow(128 * 1024, 64 * 1024)]
-        [DataRow(128 * 1024, 128 * 1024)]
-        public void TestArrayConversionLarge(int size, int segment)
+        [DataRow(128 * 1024, 8 * 1024, BufferStandard)]
+        [DataRow(128 * 1024, 16 * 1024, BufferStandard)]
+        [DataRow(128 * 1024, 64 * 1024, BufferStandard)]
+        [DataRow(128 * 1024, 128 * 1024, BufferStandard)]
+        [DataRow(128 * 1024, 8 * 1024, BufferContinuous)]
+        [DataRow(128 * 1024, 16 * 1024, BufferContinuous)]
+        [DataRow(128 * 1024, 64 * 1024, BufferContinuous)]
+        [DataRow(128 * 1024, 128 * 1024, BufferContinuous)]
+        public void TestArrayConversionLarge(int size, int segment, int type)
         {
             var data = new ComplexType[size];
             var datas = data.AsSpan();
             this.RNG.GetBytes(MemoryMarshal.AsBytes(datas));
 
-            using var buff = new MemoryBuffer<ComplexType>(segment);
+            using var buff = CreateMemoryBuffer<ComplexType>(type, segment);
             buff.Write(datas);
 
             Assert.IsTrue(buff.Capacity >= (ulong)size);
