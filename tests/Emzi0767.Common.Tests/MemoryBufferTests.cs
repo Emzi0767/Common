@@ -316,6 +316,42 @@ namespace Emzi0767.Common.Tests
         [DataRow(128 * 1024, 16 * 1024, BufferContinuous)]
         [DataRow(128 * 1024, 64 * 1024, BufferContinuous)]
         [DataRow(128 * 1024, 128 * 1024, BufferContinuous)]
+        public void TestClearing(int size, int segment, int type)
+        {
+            var data = new byte[size];
+            var datas = data.AsSpan();
+            this.RNG.GetBytes(datas);
+
+            using var buff = CreateMemoryBuffer<byte>(type, segment);
+            buff.Write(datas);
+
+            var oldcap = buff.Capacity;
+            Assert.IsTrue(buff.Capacity >= (ulong)size);
+            Assert.AreEqual((ulong)size, buff.Length);
+
+            var readout = buff.ToArray();
+            var readouts = readout.AsSpan();
+            Assert.AreEqual(size, readout.Length);
+            Assert.IsTrue(readouts.SequenceEqual(datas));
+
+            buff.Clear();
+
+            Assert.AreEqual(oldcap, buff.Capacity);
+            Assert.AreEqual(0UL, buff.Length);
+
+            readout = buff.ToArray();
+            Assert.AreEqual(0, readout.Length);
+        }
+
+        [DataTestMethod]
+        [DataRow(128 * 1024, 8 * 1024, BufferStandard)]
+        [DataRow(128 * 1024, 16 * 1024, BufferStandard)]
+        [DataRow(128 * 1024, 64 * 1024, BufferStandard)]
+        [DataRow(128 * 1024, 128 * 1024, BufferStandard)]
+        [DataRow(128 * 1024, 8 * 1024, BufferContinuous)]
+        [DataRow(128 * 1024, 16 * 1024, BufferContinuous)]
+        [DataRow(128 * 1024, 64 * 1024, BufferContinuous)]
+        [DataRow(128 * 1024, 128 * 1024, BufferContinuous)]
         public void TestArrayConversionI16(int size, int segment, int type)
         {
             var data = new short[size];

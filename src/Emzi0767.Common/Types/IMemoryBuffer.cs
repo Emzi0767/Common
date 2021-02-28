@@ -112,5 +112,10 @@ namespace Emzi0767.Types
         /// </summary>
         /// <param name="destination">Stream to copy this buffer's data to.</param>
         void CopyTo(Stream destination);
+
+        /// <summary>
+        /// Resets the buffer's pointer to the beginning, allowing for reuse.
+        /// </summary>
+        void Clear();
     }
 }

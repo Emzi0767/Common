@@ -204,6 +204,15 @@ namespace Emzi0767.Types
 #endif
         }
 
+        /// <inheritdoc />
+        public void Clear()
+        {
+            if (this._isDisposed)
+                throw new ObjectDisposedException("This buffer is disposed.");
+
+            this._pos = 0;
+        }
+
         /// <summary>
         /// Disposes of any resources claimed by this buffer.
         /// </summary>
