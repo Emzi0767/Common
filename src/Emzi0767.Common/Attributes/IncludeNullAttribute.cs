@@ -25,6 +25,6 @@ namespace Emzi0767.Serialization
     /// </summary>
     [Obsolete("Use [DataMember] with EmitDefaultValue = true.")]
     [AttributeUsage(AttributeTargets.Property | AttributeTargets.Field, AllowMultiple = false, Inherited = true)]
-    public sealed class IncludeNullAttribute : Attribute
+    public sealed class IncludeNullAttribute : SerializationAttribute
     { }
 }

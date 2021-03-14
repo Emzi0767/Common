@@ -24,6 +24,6 @@ namespace Emzi0767.Serialization
     /// <para>This is used to indicate that large numbers are safe for direct serialization into formats which do support 64-bit integers natively (such as JSON).</para>
     /// </summary>
     [AttributeUsage(AttributeTargets.Property | AttributeTargets.Field, AllowMultiple = false, Inherited = true)]
-    public sealed class Int53Attribute : Attribute
+    public sealed class Int53Attribute : SerializationAttribute
     { }
 }

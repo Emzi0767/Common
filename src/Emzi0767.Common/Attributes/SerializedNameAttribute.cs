@@ -24,7 +24,7 @@ namespace Emzi0767.Serialization
     /// </summary>
     [Obsolete("Use [DataMember] with set Name instead.")]
     [AttributeUsage(AttributeTargets.Property | AttributeTargets.Field, AllowMultiple = false, Inherited = true)]
-    public sealed class SerializedNameAttribute : Attribute
+    public sealed class SerializedNameAttribute : SerializationAttribute
     {
         /// <summary>
         /// Gets the serialized name of the field or property.
