@@ -25,5 +25,17 @@ namespace Emzi0767.Serialization
     /// </summary>
     [AttributeUsage(AttributeTargets.Property | AttributeTargets.Field, AllowMultiple = false, Inherited = true)]
     public sealed class Int53Attribute : SerializationAttribute
-    { }
+    {
+        /// <summary>
+        /// <para>Gets the maximum safe value representable as an integer by a IEEE754 64-bit binary floating point value.</para>
+        /// <para>This value equals to 9007199254740991.</para>
+        /// </summary>
+        public const long MaxValue = (1L << 53) - 1;
+
+        /// <summary>
+        /// <para>Gets the minimum safe value representable as an integer by a IEEE754 64-bit binary floating point value.</para>
+        /// <para>This value equals to -9007199254740991.</para>
+        /// </summary>
+        public const long MinValue = -MaxValue;
+    }
 }
