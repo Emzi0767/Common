@@ -449,6 +449,21 @@ namespace Emzi0767
         public static ulong CalculateKnuthHash(this string chars, int start, int count)
             => Knuth(chars.AsSpan(start, count));
 
+        internal static (T first, T second) FirstTwoOrDefault<T>(this IEnumerable<T> enumerable)
+        {
+            using var enumerator = enumerable.GetEnumerator();
+
+            if (!enumerator.MoveNext())
+                return (default, default);
+
+            var first = enumerator.Current;
+
+            if (!enumerator.MoveNext())
+                return (first, default);
+
+            return (first, enumerator.Current);
+        }
+
         private static ulong Knuth(ReadOnlySpan<char> chars)
         {
             var hash = 3074457345618258791ul;
