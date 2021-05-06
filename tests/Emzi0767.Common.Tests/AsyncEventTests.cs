@@ -1,4 +1,4 @@
-﻿// This file is a part of Emzi0767.Common project.
+// This file is a part of Emzi0767.Common project.
 // 
 // Copyright 2020 Emzi0767
 // 
@@ -152,6 +152,35 @@ namespace Emzi0767.Common.Tests
 
             Task Handler(AsyncEventTests sender, TestEventArgs e)
                 => throw new TestException();
+
+            void RunHandlers()
+            {
+                try
+                {
+                    this.Executor.Execute(this.Event.InvokeAsync(this, new TestEventArgs(420, ex => { }), AsyncEventExceptionMode.ThrowAllHandleAll));
+                }
+                catch
+                {
+                    throw;
+                }
+            }
+        }
+
+        [TestMethod]
+        public void TestThrowing2()
+        {
+            this.TestEvent += Handler;
+            var aggregateEx = Assert.ThrowsException<AggregateException>(RunHandlers);
+            this.TestEvent -= Handler;
+
+            Assert.AreEqual(1, aggregateEx.InnerExceptions.Count);
+            Assert.IsInstanceOfType(aggregateEx.InnerExceptions[0], typeof(TestException));
+
+            async Task Handler(AsyncEventTests sender, TestEventArgs e)
+            {
+                await Task.Yield();
+                throw new TestException();
+            }
 
             void RunHandlers()
             {

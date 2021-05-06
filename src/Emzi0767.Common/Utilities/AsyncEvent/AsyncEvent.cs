@@ -1,4 +1,4 @@
-﻿// This file is part of Emzi0767.Common project
+// This file is part of Emzi0767.Common project
 //
 // Copyright 2020 Emzi0767
 // 
@@ -149,11 +149,10 @@ namespace Emzi0767.Utilities
 
                             if ((exceptionMode & AsyncEventExceptionMode.ThrowNonFatal) == AsyncEventExceptionMode.ThrowNonFatal)
                                 exceptions.Add(timeoutEx);
-
-                            await handlerTask.ConfigureAwait(false);
                         }
                     }
-                    else if (handlerTask != null)
+
+                    if (handlerTask != null)
                     {
                         // No timeout is configured, or timeout already expired, proceed as usual
                         await handlerTask.ConfigureAwait(false);
