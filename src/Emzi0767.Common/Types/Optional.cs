@@ -40,7 +40,7 @@ namespace Emzi0767
         /// <summary>
         /// Gets the value of this <see cref="Optional{T}"/>. Will throw if a value is not present.
         /// </summary>
-        public T Value 
+        public T Value
             => this.HasValue ? this._value : throw new InvalidOperationException("This property has no value set.");
         private readonly T _value;
 

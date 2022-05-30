@@ -175,7 +175,7 @@ namespace Emzi0767
 
             return inclusive ? (num >= min && num <= max) : (num > min && num < max);
         }
-        
+
         /// <summary>
         /// Tests wheter given value is in supplied range, optionally allowing it to be an exclusive check.
         /// </summary>

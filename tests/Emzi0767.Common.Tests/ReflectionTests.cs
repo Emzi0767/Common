@@ -15,6 +15,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+using System;
 using Emzi0767.Utilities;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -98,6 +99,16 @@ namespace Emzi0767.Common.Tests
             Assert.AreEqual(true, dz["IsInitialized"]);
             Assert.AreEqual(43, dw["Value"]);
             Assert.AreEqual(false, dv["IsInitialized"]);
+        }
+
+        [TestMethod]
+        public void TestDictionaryAnonymousConversion()
+        {
+            var id = Guid.NewGuid();
+            var x = new { id };
+            var y = x.ToDictionary();
+
+            Assert.AreEqual(id, y["id"]);
         }
     }
 }

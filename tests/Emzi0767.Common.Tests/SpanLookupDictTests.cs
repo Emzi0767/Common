@@ -248,6 +248,7 @@ namespace Emzi0767.Common.Tests
                 Assert.IsTrue(this.TestValues.Any(x => x.Key == k && x.Value == v));
                 i++;
             }
+
             Assert.AreEqual(this.TestValues.Count(), i);
 
             dict.Clear();
@@ -259,6 +260,7 @@ namespace Emzi0767.Common.Tests
                 Assert.Fail();
                 i++;
             }
+
             Assert.AreEqual(0, i);
         }
 
@@ -280,6 +282,7 @@ namespace Emzi0767.Common.Tests
                 Assert.IsTrue(keys.Contains(k));
                 i++;
             }
+
             Assert.AreEqual(dict.Count, i);
 
             i = 0;
@@ -291,6 +294,7 @@ namespace Emzi0767.Common.Tests
                 Assert.IsTrue(vals.Contains(v));
                 i++;
             }
+
             Assert.AreEqual(dict.Count, i);
         }
     }

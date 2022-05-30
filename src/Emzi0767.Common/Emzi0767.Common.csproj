@@ -21,14 +21,14 @@
   <PropertyGroup>
     <AssemblyName>Emzi0767.Common</AssemblyName>
     <RootNamespace>Emzi0767</RootNamespace>
-    <VersionPrefix>2.6.3</VersionPrefix>
+    <VersionPrefix>2.6.4</VersionPrefix>
     <LangVersion>9.0</LangVersion>
     <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
     <Optimize>True</Optimize>
     <GenerateDocumentationFile>True</GenerateDocumentationFile>
     <DebugType>Portable</DebugType>
     <OutputType>Library</OutputType>
-    <TargetFrameworks>net45;netstandard2.0;netcoreapp2.1</TargetFrameworks>
+    <TargetFrameworks>netstandard2.0;net6.0</TargetFrameworks>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -37,18 +37,14 @@
     <PackageTags>emzi0767 common utilities dotnet dotnet-core dotnetfx netfx netcore csharp</PackageTags>
     <Authors>Emzi0767</Authors>
     <Company>Emzi0767</Company>
-    <PackageLicenseExpression>AGPL-3.0</PackageLicenseExpression>
+    <PackageLicenseExpression>AGPL-3.0-or-later</PackageLicenseExpression>
     <PackageProjectUrl>https://github.com/Emzi0767/Common</PackageProjectUrl>
     <RepositoryUrl>https://github.com/Emzi0767/Common</RepositoryUrl>
     <RepositoryType>Git</RepositoryType>
   </PropertyGroup>
 
-  <PropertyGroup Condition="'$(TargetFramework)' == 'netcoreapp2.1'">
+  <PropertyGroup Condition="'$(TargetFramework)' == 'net6.0'">
     <DefineConstants>HAS_SPAN_STREAM_OVERLOADS</DefineConstants>
-  </PropertyGroup>
-
-  <PropertyGroup Condition="'$(TargetFramework)' == 'netstandard2.0' Or '$(TargetFramework)' == 'netcoreapp2.1'">
-    
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)' == 'Debug'">

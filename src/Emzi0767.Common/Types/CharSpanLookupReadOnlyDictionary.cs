@@ -1,4 +1,4 @@
-﻿// This file is part of Emzi0767.Common project
+// This file is part of Emzi0767.Common project
 //
 // Copyright (C) 2020-2021 Emzi0767
 // 

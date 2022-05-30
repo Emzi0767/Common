@@ -1,4 +1,4 @@
-﻿// This file is part of Emzi0767.Common project
+// This file is part of Emzi0767.Common project
 //
 // Copyright (C) 2020-2021 Emzi0767
 // 
@@ -63,7 +63,7 @@ namespace Emzi0767
         {
             this.RNG.GetNonZeroBytes(buffer);
         }
-        
+
         /// <summary>
         /// Fills a supplied memory region with random bytes.
         /// </summary>
@@ -86,7 +86,7 @@ namespace Emzi0767
             }
 #endif
         }
-        
+
         /// <summary>
         /// Fills a supplied memory region with random nonzero bytes.
         /// </summary>
@@ -300,9 +300,9 @@ namespace Emzi0767
         /// Fills specified memory region with random bytes.
         /// </summary>
         /// <param name="buffer">Memory region to fill with bytes.</param>
-        #if NETCOREAPP
-        override 
-        #endif 
+#if NETCOREAPP
+        override
+#endif
         public void NextBytes(Span<byte> buffer)
             => this.GetBytes(buffer);
 

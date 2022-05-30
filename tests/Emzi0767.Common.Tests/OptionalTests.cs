@@ -141,15 +141,20 @@ namespace Emzi0767.Common.Tests
         {
             // Test that optionals with a value are truthy
             if (this.Optional42_0) { } else { Assert.Fail(); }
+
             if (this.Optional42_1) { } else { Assert.Fail(); }
+
             if (this.Optional69) { } else { Assert.Fail(); }
+
             if (this.OptionalDefaultInt) { } else { Assert.Fail(); }
-            
+
             if (this.OptionalString42) { } else { Assert.Fail(); }
+
             if (this.OptionalDefaultString) { } else { Assert.Fail(); }
 
             // Test that optionals with no value are falsey
             if (this.OptionalNoValueInt) { Assert.Fail(); }
+
             if (this.OptionalNoValueString) { Assert.Fail(); }
         }
     }

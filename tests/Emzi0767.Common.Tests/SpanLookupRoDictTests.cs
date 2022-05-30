@@ -1,4 +1,4 @@
-﻿// This file is part of Emzi0767.Common project
+// This file is part of Emzi0767.Common project
 //
 // Copyright (C) 2020-2021 Emzi0767
 // 
@@ -126,6 +126,7 @@ namespace Emzi0767.Common.Tests
                 Assert.IsTrue(this.TestValues.Any(x => x.Key == k && x.Value == v));
                 i++;
             }
+
             Assert.AreEqual(this.TestValues.Count(), i);
         }
 
@@ -147,6 +148,7 @@ namespace Emzi0767.Common.Tests
                 Assert.IsTrue(keys.Contains(k));
                 i++;
             }
+
             Assert.AreEqual(dict.Count, i);
 
             i = 0;
@@ -158,6 +160,7 @@ namespace Emzi0767.Common.Tests
                 Assert.IsTrue(vals.Contains(v));
                 i++;
             }
+
             Assert.AreEqual(dict.Count, i);
         }
     }

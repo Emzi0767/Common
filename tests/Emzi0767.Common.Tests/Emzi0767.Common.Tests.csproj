@@ -21,7 +21,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>net45;net472;netcoreapp2.1;netcoreapp3.1</TargetFrameworks>
+    <TargetFrameworks>net472;net6.0</TargetFrameworks>
     <LangVersion>9.0</LangVersion>
 
     <IsPackable>false</IsPackable>

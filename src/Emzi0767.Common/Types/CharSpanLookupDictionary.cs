@@ -26,9 +26,9 @@ namespace Emzi0767
     /// Represents collection of string keys and <typeparamref name="TValue"/> values, allowing the use of <see cref="ReadOnlySpan{T}"/> for dictionary operations.
     /// </summary>
     /// <typeparam name="TValue">Type of items in this dictionary.</typeparam>
-    public sealed class CharSpanLookupDictionary<TValue> : 
-        IDictionary<string, TValue>, 
-        IReadOnlyDictionary<string, TValue>, 
+    public sealed class CharSpanLookupDictionary<TValue> :
+        IDictionary<string, TValue>,
+        IReadOnlyDictionary<string, TValue>,
         IDictionary
     {
         /// <summary>
@@ -91,7 +91,7 @@ namespace Emzi0767
             set
             {
                 if (key == null)
-                     throw new ArgumentNullException(nameof(key));
+                    throw new ArgumentNullException(nameof(key));
 
                 this.TryInsertInternal(key, value, true);
             }
@@ -130,7 +130,7 @@ namespace Emzi0767
         {
             get
             {
-                if (!(key is string tkey))
+                if (key is not string tkey)
                     throw new ArgumentException("Key needs to be an instance of a string.");
 
                 if (!this.TryRetrieveInternal(tkey.AsSpan(), out var value))
@@ -141,10 +141,10 @@ namespace Emzi0767
 
             set
             {
-                if (!(key is string tkey))
+                if (key is not string tkey)
                     throw new ArgumentException("Key needs to be an instance of a string.");
 
-                if (!(value is TValue tvalue))
+                if (value is not TValue tvalue)
                 {
                     tvalue = default;
                     if (tvalue != null)
@@ -351,10 +351,10 @@ namespace Emzi0767
 
         void IDictionary.Add(object key, object value)
         {
-            if (!(key is string tkey))
+            if (key is not string tkey)
                 throw new ArgumentException("Key needs to be an instance of a string.");
 
-            if (!(value is TValue tvalue))
+            if (value is not TValue tvalue)
             {
                 tvalue = default;
                 if (tvalue != null)
@@ -366,7 +366,7 @@ namespace Emzi0767
 
         void IDictionary.Remove(object key)
         {
-            if (!(key is string tkey))
+            if (key is not string tkey)
                 throw new ArgumentException("Key needs to be an instance of a string.");
 
             this.TryRemove(tkey, out _);
@@ -374,7 +374,7 @@ namespace Emzi0767
 
         bool IDictionary.Contains(object key)
         {
-            if (!(key is string tkey))
+            if (key is not string tkey)
                 throw new ArgumentException("Key needs to be an instance of a string.");
 
             return this.ContainsKey(tkey);
@@ -417,7 +417,7 @@ namespace Emzi0767
                 return;
             }
 
-            if (!(array is object[]))
+            if (array is not object[])
                 throw new ArgumentException($"Array needs to be an instance of {typeof(TValue[])} or object[].");
 
             var i = arrayIndex;
