@@ -63,7 +63,8 @@ namespace Emzi0767.Utilities
             if (obj == null)
                 throw new NullReferenceException();
 
-            return new CharSpanLookupReadOnlyDictionary<object>(typeof(T).GetProperties(BindingFlags.Public | BindingFlags.Instance)
+            return new CharSpanLookupReadOnlyDictionary<object>(obj.GetType()
+                .GetProperties(BindingFlags.Public | BindingFlags.Instance)
                 .Select(x => new KeyValuePair<string, object>(x.Name, x.GetValue(obj))));
         }
     }
