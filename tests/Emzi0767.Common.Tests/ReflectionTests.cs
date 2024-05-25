@@ -16,6 +16,7 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 using System;
+using System.Diagnostics;
 using Emzi0767.Utilities;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -83,22 +84,43 @@ namespace Emzi0767.Common.Tests
             var w = new TestClass1(42);
             var v = ReflectionUtilities.CreateEmpty<TestClass0>();
 
-            var dx = x.ToDictionary();
-            var dy = y.ToDictionary();
-            var dz = z.ToDictionary();
-            var dw = w.ToDictionary();
-            var dv = v.ToDictionary();
+            var dxf = x.ToDictionary(useCachedModel: true);
+            var dyf = y.ToDictionary(useCachedModel: true);
+            var dzf = z.ToDictionary(useCachedModel: true);
+            var dwf = w.ToDictionary(useCachedModel: true);
+            var dvf = v.ToDictionary(useCachedModel: true);
 
-            Assert.AreEqual(x.Text, dx["Text"]);
-            Assert.AreEqual(y.Text, dy["Text"]);
-            Assert.AreNotEqual(x.Text, dy["Text"]);
-            Assert.AreEqual(x.Number, dx["Number"]);
-            Assert.AreEqual(y.Number, dy["Number"]);
-            Assert.AreNotEqual(x.Number, dy["Number"]);
-            Assert.AreNotEqual(dx["Text"], dx["Number"]);
-            Assert.AreEqual(true, dz["IsInitialized"]);
-            Assert.AreEqual(43, dw["Value"]);
-            Assert.AreEqual(false, dv["IsInitialized"]);
+            var dxs = x.ToDictionary(useCachedModel: false);
+            var dys = y.ToDictionary(useCachedModel: false);
+            var dzs = z.ToDictionary(useCachedModel: false);
+            var dws = w.ToDictionary(useCachedModel: false);
+            var dvs = v.ToDictionary(useCachedModel: false);
+
+            Assert.AreEqual(x.Text, dxf["Text"]);
+            Assert.AreEqual(y.Text, dyf["Text"]);
+            Assert.AreNotEqual(x.Text, dyf["Text"]);
+            Assert.AreEqual(x.Number, dxf["Number"]);
+            Assert.AreEqual(y.Number, dyf["Number"]);
+            Assert.AreNotEqual(x.Number, dyf["Number"]);
+            Assert.AreNotEqual(dxf["Text"], dxf["Number"]);
+            Assert.AreEqual(true, dzf["IsInitialized"]);
+            Assert.AreEqual(43, dwf["Value"]);
+            Assert.AreEqual(false, dvf["IsInitialized"]);
+
+            var sw = new Stopwatch();
+            sw.Start();
+            for (var i = 0; i < 1000; ++i)
+                x.ToDictionary(useCachedModel: true);
+            sw.Stop();
+            var tFast = sw.ElapsedTicks;
+
+            sw.Restart();
+            for (var i = 0; i < 1000; ++i)
+                x.ToDictionary(useCachedModel: false);
+            sw.Stop();
+            var tSlow = sw.ElapsedTicks;
+
+            Assert.IsTrue(tFast < tSlow);
         }
 
         [TestMethod]
