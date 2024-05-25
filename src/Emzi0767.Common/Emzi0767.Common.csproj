@@ -21,8 +21,8 @@
   <PropertyGroup>
     <AssemblyName>Emzi0767.Common</AssemblyName>
     <RootNamespace>Emzi0767</RootNamespace>
-    <VersionPrefix>2.6.6</VersionPrefix>
-    <LangVersion>9.0</LangVersion>
+    <VersionPrefix>2.8.0</VersionPrefix>
+    <LangVersion>11.0</LangVersion>
     <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
     <Optimize>True</Optimize>
     <GenerateDocumentationFile>True</GenerateDocumentationFile>
