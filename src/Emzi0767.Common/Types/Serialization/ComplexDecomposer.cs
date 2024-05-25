@@ -1,95 +1,95 @@
-﻿// This file is part of Emzi0767.Common project
+﻿// This file is part of Emzi0767.Common project.
 //
-// Copyright 2020 Emzi0767
-// 
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-// 
-//   http://www.apache.org/licenses/LICENSE-2.0
-// 
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+// Copyright © 2020-2024 Emzi0767
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Lesser General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public License
+// along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
 
-namespace Emzi0767.Serialization
+namespace Emzi0767.Serialization;
+
+/// <summary>
+/// Decomposes <see cref="Complex"/> numbers into tuples (arrays of 2).
+/// </summary>
+public sealed class ComplexDecomposer : IDecomposer
 {
-    /// <summary>
-    /// Decomposes <see cref="Complex"/> numbers into tuples (arrays of 2).
-    /// </summary>
-    public sealed class ComplexDecomposer : IDecomposer
+    private static Type TComplex { get; } = typeof(Complex);
+    private static Type TDoubleArray { get; } = typeof(double[]);
+    private static Type TDoubleEnumerable { get; } = typeof(IEnumerable<double>);
+    private static Type TObjectArray { get; } = typeof(object[]);
+    private static Type TObjectEnumerable { get; } = typeof(IEnumerable<object>);
+
+    /// <inheritdoc />
+    public bool CanDecompose(Type t)
+        => t == TComplex;
+
+    /// <inheritdoc />
+    public bool CanRecompose(Type t)
+        => t == TDoubleArray
+        || t == TObjectArray
+        || TDoubleEnumerable.IsAssignableFrom(t)
+        || TObjectEnumerable.IsAssignableFrom(t);
+
+    /// <inheritdoc />
+    public bool TryDecompose(object obj, Type tobj, out object decomposed, out Type tdecomposed)
     {
-        private static Type TComplex { get; } = typeof(Complex);
-        private static Type TDoubleArray { get; } = typeof(double[]);
-        private static Type TDoubleEnumerable { get; } = typeof(IEnumerable<double>);
-        private static Type TObjectArray { get; } = typeof(object[]);
-        private static Type TObjectEnumerable { get; } = typeof(IEnumerable<object>);
+        decomposed = null;
+        tdecomposed = TDoubleArray;
 
-        /// <inheritdoc />
-        public bool CanDecompose(Type t)
-            => t == TComplex;
+        if (tobj != TComplex || obj is not Complex c)
+            return false;
 
-        /// <inheritdoc />
-        public bool CanRecompose(Type t)
-            => t == TDoubleArray
-            || t == TObjectArray
-            || TDoubleEnumerable.IsAssignableFrom(t)
-            || TObjectEnumerable.IsAssignableFrom(t);
+        decomposed = new[] { c.Real, c.Imaginary };
+        return true;
+    }
 
-        /// <inheritdoc />
-        public bool TryDecompose(object obj, Type tobj, out object decomposed, out Type tdecomposed)
+    /// <inheritdoc />
+    public bool TryRecompose(object obj, Type tobj, Type trecomposed, out object recomposed)
+    {
+        recomposed = null;
+
+        if (trecomposed != TComplex)
+            return false;
+
+        // ie<double>
+        if (TDoubleEnumerable.IsAssignableFrom(tobj) && obj is IEnumerable<double> ied)
         {
-            decomposed = null;
-            tdecomposed = TDoubleArray;
-
-            if (tobj != TComplex || obj is not Complex c)
+            if (ied.Count() < 2)
                 return false;
 
-            decomposed = new[] { c.Real, c.Imaginary };
+            var (real, imag) = ied.FirstTwoOrDefault();
+            recomposed = new Complex(real, imag);
             return true;
         }
 
-        /// <inheritdoc />
-        public bool TryRecompose(object obj, Type tobj, Type trecomposed, out object recomposed)
+        // ie<obj>
+        if (TObjectEnumerable.IsAssignableFrom(tobj) && obj is IEnumerable<object> ieo)
         {
-            recomposed = null;
-
-            if (trecomposed != TComplex)
+            if (ieo.Count() < 2)
                 return false;
 
-            // ie<double>
-            if (TDoubleEnumerable.IsAssignableFrom(tobj) && obj is IEnumerable<double> ied)
-            {
-                if (ied.Count() < 2)
-                    return false;
+            var (real, imag) = ieo.FirstTwoOrDefault();
+            if (real is not double dreal || imag is not double dimag)
+                return false;
 
-                var (real, imag) = ied.FirstTwoOrDefault();
-                recomposed = new Complex(real, imag);
-                return true;
-            }
-
-            // ie<obj>
-            if (TObjectEnumerable.IsAssignableFrom(tobj) && obj is IEnumerable<object> ieo)
-            {
-                if (ieo.Count() < 2)
-                    return false;
-
-                var (real, imag) = ieo.FirstTwoOrDefault();
-                if (real is not double dreal || imag is not double dimag)
-                    return false;
-
-                recomposed = new Complex(dreal, dimag);
-                return true;
-            }
-
-            return false;
+            recomposed = new Complex(dreal, dimag);
+            return true;
         }
+
+        return false;
     }
 }

@@ -1,30 +1,29 @@
-// This file is a part of Emzi0767.Common project.
-// 
-// Copyright (C) 2020-2021 Emzi0767
-// 
+﻿// This file is part of Emzi0767.Common project.
+//
+// Copyright © 2020-2024 Emzi0767
+//
 // This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
+// it under the terms of the GNU Lesser General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Affero General Public License for more details.
-// 
-// You should have received a copy of the GNU Affero General Public License
+// GNU Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 using System;
 
-namespace Emzi0767.Serialization
-{
-    /// <summary>
-    /// <para>Specifies that if the value of the field or property is null, it should be included in the serialized data.</para>
-    /// <para>This alters the default behaviour of ignoring nulls.</para>
-    /// </summary>
-    [Obsolete("Use [DataMember] with EmitDefaultValue = true.")]
-    [AttributeUsage(AttributeTargets.Property | AttributeTargets.Field, AllowMultiple = false, Inherited = true)]
-    public sealed class IncludeNullAttribute : SerializationAttribute
-    { }
-}
+namespace Emzi0767.Serialization;
+
+/// <summary>
+/// <para>Specifies that if the value of the field or property is null, it should be included in the serialized data.</para>
+/// <para>This alters the default behaviour of ignoring nulls.</para>
+/// </summary>
+[Obsolete("Use [DataMember] with EmitDefaultValue = true.")]
+[AttributeUsage(AttributeTargets.Property | AttributeTargets.Field, AllowMultiple = false, Inherited = true)]
+public sealed class IncludeNullAttribute : SerializationAttribute
+{ }
