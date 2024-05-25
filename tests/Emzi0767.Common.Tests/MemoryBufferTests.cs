@@ -31,32 +31,32 @@ public sealed class MemoryBufferTests
 {
     private SecureRandom RNG { get; } = new SecureRandom();
 
-    private const int BufferStandard = 0;
-    private const int BufferContinuous = 1;
+    private const int _bufferStandard = 0;
+    private const int _bufferContinuous = 1;
 
     private static IMemoryBuffer<T> CreateMemoryBuffer<T>(int type, int size)
         where T : unmanaged
         => type switch
         {
-            BufferStandard => new MemoryBuffer<T>(size),
-            BufferContinuous => new ContinuousMemoryBuffer<T>(size),
+            _bufferStandard => new MemoryBuffer<T>(size),
+            _bufferContinuous => new ContinuousMemoryBuffer<T>(size),
 
             _ => null
         };
 
     [DataTestMethod]
-    [DataRow(32 * 1024, 16 * 1024, BufferStandard)]
-    [DataRow(32 * 1024, 32 * 1024, BufferStandard)]
-    [DataRow(32 * 1024, 64 * 1024, BufferStandard)]
-    [DataRow(16 * 1024, 64 * 1024, BufferStandard)]
-    [DataRow(128 * 1024, 64 * 1024, BufferStandard)]
-    [DataRow(512 * 1024, 64 * 1024, BufferStandard)]
-    [DataRow(32 * 1024, 16 * 1024, BufferContinuous)]
-    [DataRow(32 * 1024, 32 * 1024, BufferContinuous)]
-    [DataRow(32 * 1024, 64 * 1024, BufferContinuous)]
-    [DataRow(16 * 1024, 64 * 1024, BufferContinuous)]
-    [DataRow(128 * 1024, 64 * 1024, BufferContinuous)]
-    [DataRow(512 * 1024, 64 * 1024, BufferContinuous)]
+    [DataRow(32 * 1024, 16 * 1024, _bufferStandard)]
+    [DataRow(32 * 1024, 32 * 1024, _bufferStandard)]
+    [DataRow(32 * 1024, 64 * 1024, _bufferStandard)]
+    [DataRow(16 * 1024, 64 * 1024, _bufferStandard)]
+    [DataRow(128 * 1024, 64 * 1024, _bufferStandard)]
+    [DataRow(512 * 1024, 64 * 1024, _bufferStandard)]
+    [DataRow(32 * 1024, 16 * 1024, _bufferContinuous)]
+    [DataRow(32 * 1024, 32 * 1024, _bufferContinuous)]
+    [DataRow(32 * 1024, 64 * 1024, _bufferContinuous)]
+    [DataRow(16 * 1024, 64 * 1024, _bufferContinuous)]
+    [DataRow(128 * 1024, 64 * 1024, _bufferContinuous)]
+    [DataRow(512 * 1024, 64 * 1024, _bufferContinuous)]
     public void TestStraightWrite(int size, int segment, int type)
     {
         var data = new byte[size];
@@ -77,16 +77,16 @@ public sealed class MemoryBufferTests
     }
 
     [DataTestMethod]
-    [DataRow(128 * 1024, 16 * 1024, 16, BufferStandard)]
-    [DataRow(128 * 1024, 16 * 1024, 384, BufferStandard)]
-    [DataRow(128 * 1024, 16 * 1024, 512, BufferStandard)]
-    [DataRow(128 * 1024, 16 * 1024, 1024, BufferStandard)]
-    [DataRow(128 * 1024, 16 * 1024, 4096, BufferStandard)]
-    [DataRow(128 * 1024, 16 * 1024, 16, BufferContinuous)]
-    [DataRow(128 * 1024, 16 * 1024, 384, BufferContinuous)]
-    [DataRow(128 * 1024, 16 * 1024, 512, BufferContinuous)]
-    [DataRow(128 * 1024, 16 * 1024, 1024, BufferContinuous)]
-    [DataRow(128 * 1024, 16 * 1024, 4096, BufferContinuous)]
+    [DataRow(128 * 1024, 16 * 1024, 16, _bufferStandard)]
+    [DataRow(128 * 1024, 16 * 1024, 384, _bufferStandard)]
+    [DataRow(128 * 1024, 16 * 1024, 512, _bufferStandard)]
+    [DataRow(128 * 1024, 16 * 1024, 1024, _bufferStandard)]
+    [DataRow(128 * 1024, 16 * 1024, 4096, _bufferStandard)]
+    [DataRow(128 * 1024, 16 * 1024, 16, _bufferContinuous)]
+    [DataRow(128 * 1024, 16 * 1024, 384, _bufferContinuous)]
+    [DataRow(128 * 1024, 16 * 1024, 512, _bufferContinuous)]
+    [DataRow(128 * 1024, 16 * 1024, 1024, _bufferContinuous)]
+    [DataRow(128 * 1024, 16 * 1024, 4096, _bufferContinuous)]
     public void TestPartialWrite(int size, int segment, int chunk, int type)
     {
         var data = new byte[size];
@@ -108,14 +108,14 @@ public sealed class MemoryBufferTests
     }
 
     [DataTestMethod]
-    [DataRow(128 * 1024, 8 * 1024, BufferStandard)]
-    [DataRow(128 * 1024, 16 * 1024, BufferStandard)]
-    [DataRow(128 * 1024, 64 * 1024, BufferStandard)]
-    [DataRow(128 * 1024, 128 * 1024, BufferStandard)]
-    [DataRow(128 * 1024, 8 * 1024, BufferContinuous)]
-    [DataRow(128 * 1024, 16 * 1024, BufferContinuous)]
-    [DataRow(128 * 1024, 64 * 1024, BufferContinuous)]
-    [DataRow(128 * 1024, 128 * 1024, BufferContinuous)]
+    [DataRow(128 * 1024, 8 * 1024, _bufferStandard)]
+    [DataRow(128 * 1024, 16 * 1024, _bufferStandard)]
+    [DataRow(128 * 1024, 64 * 1024, _bufferStandard)]
+    [DataRow(128 * 1024, 128 * 1024, _bufferStandard)]
+    [DataRow(128 * 1024, 8 * 1024, _bufferContinuous)]
+    [DataRow(128 * 1024, 16 * 1024, _bufferContinuous)]
+    [DataRow(128 * 1024, 64 * 1024, _bufferContinuous)]
+    [DataRow(128 * 1024, 128 * 1024, _bufferContinuous)]
     public void TestArrayConversion(int size, int segment, int type)
     {
         var data = new byte[size];
@@ -135,14 +135,14 @@ public sealed class MemoryBufferTests
     }
 
     [DataTestMethod]
-    [DataRow(128 * 1024, 8 * 1024, 12 * 1024, 3UL * 1024, BufferStandard)]
-    [DataRow(128 * 1024, 16 * 1024, 24 * 1024, 32UL * 1024, BufferStandard)]
-    [DataRow(128 * 1024, 64 * 1024, 4 * 1024, 66UL * 1024, BufferStandard)]
-    [DataRow(128 * 1024, 128 * 1024, 1 * 1024, 1UL * 1024, BufferStandard)]
-    [DataRow(128 * 1024, 8 * 1024, 12 * 1024, 3UL * 1024, BufferContinuous)]
-    [DataRow(128 * 1024, 16 * 1024, 24 * 1024, 32UL * 1024, BufferContinuous)]
-    [DataRow(128 * 1024, 64 * 1024, 4 * 1024, 66UL * 1024, BufferContinuous)]
-    [DataRow(128 * 1024, 128 * 1024, 1 * 1024, 1UL * 1024, BufferContinuous)]
+    [DataRow(128 * 1024, 8 * 1024, 12 * 1024, 3UL * 1024, _bufferStandard)]
+    [DataRow(128 * 1024, 16 * 1024, 24 * 1024, 32UL * 1024, _bufferStandard)]
+    [DataRow(128 * 1024, 64 * 1024, 4 * 1024, 66UL * 1024, _bufferStandard)]
+    [DataRow(128 * 1024, 128 * 1024, 1 * 1024, 1UL * 1024, _bufferStandard)]
+    [DataRow(128 * 1024, 8 * 1024, 12 * 1024, 3UL * 1024, _bufferContinuous)]
+    [DataRow(128 * 1024, 16 * 1024, 24 * 1024, 32UL * 1024, _bufferContinuous)]
+    [DataRow(128 * 1024, 64 * 1024, 4 * 1024, 66UL * 1024, _bufferContinuous)]
+    [DataRow(128 * 1024, 128 * 1024, 1 * 1024, 1UL * 1024, _bufferContinuous)]
     public void TestPartialReads(int size, int segment, int arraySize, ulong start, int type)
     {
         var data = new byte[size];
@@ -163,14 +163,14 @@ public sealed class MemoryBufferTests
     }
 
     [DataTestMethod]
-    [DataRow(128 * 1024, 8 * 1024, BufferStandard)]
-    [DataRow(128 * 1024, 16 * 1024, BufferStandard)]
-    [DataRow(128 * 1024, 64 * 1024, BufferStandard)]
-    [DataRow(128 * 1024, 128 * 1024, BufferStandard)]
-    [DataRow(128 * 1024, 8 * 1024, BufferContinuous)]
-    [DataRow(128 * 1024, 16 * 1024, BufferContinuous)]
-    [DataRow(128 * 1024, 64 * 1024, BufferContinuous)]
-    [DataRow(128 * 1024, 128 * 1024, BufferContinuous)]
+    [DataRow(128 * 1024, 8 * 1024, _bufferStandard)]
+    [DataRow(128 * 1024, 16 * 1024, _bufferStandard)]
+    [DataRow(128 * 1024, 64 * 1024, _bufferStandard)]
+    [DataRow(128 * 1024, 128 * 1024, _bufferStandard)]
+    [DataRow(128 * 1024, 8 * 1024, _bufferContinuous)]
+    [DataRow(128 * 1024, 16 * 1024, _bufferContinuous)]
+    [DataRow(128 * 1024, 64 * 1024, _bufferContinuous)]
+    [DataRow(128 * 1024, 128 * 1024, _bufferContinuous)]
     public void TestStreamCopy(int size, int segment, int type)
     {
         var data = new byte[size];
@@ -194,14 +194,14 @@ public sealed class MemoryBufferTests
     }
 
     [DataTestMethod]
-    [DataRow(128 * 1024, 8 * 1024, BufferStandard)]
-    [DataRow(128 * 1024, 16 * 1024, BufferStandard)]
-    [DataRow(128 * 1024, 64 * 1024, BufferStandard)]
-    [DataRow(128 * 1024, 128 * 1024, BufferStandard)]
-    [DataRow(128 * 1024, 8 * 1024, BufferContinuous)]
-    [DataRow(128 * 1024, 16 * 1024, BufferContinuous)]
-    [DataRow(128 * 1024, 64 * 1024, BufferContinuous)]
-    [DataRow(128 * 1024, 128 * 1024, BufferContinuous)]
+    [DataRow(128 * 1024, 8 * 1024, _bufferStandard)]
+    [DataRow(128 * 1024, 16 * 1024, _bufferStandard)]
+    [DataRow(128 * 1024, 64 * 1024, _bufferStandard)]
+    [DataRow(128 * 1024, 128 * 1024, _bufferStandard)]
+    [DataRow(128 * 1024, 8 * 1024, _bufferContinuous)]
+    [DataRow(128 * 1024, 16 * 1024, _bufferContinuous)]
+    [DataRow(128 * 1024, 64 * 1024, _bufferContinuous)]
+    [DataRow(128 * 1024, 128 * 1024, _bufferContinuous)]
     public void TestStreamWrite(int size, int segment, int type)
     {
         var data = new byte[size];
@@ -224,14 +224,14 @@ public sealed class MemoryBufferTests
     }
 
     [DataTestMethod]
-    [DataRow(128 * 1024, 8 * 1024, BufferStandard)]
-    [DataRow(128 * 1024, 16 * 1024, BufferStandard)]
-    [DataRow(128 * 1024, 64 * 1024, BufferStandard)]
-    [DataRow(128 * 1024, 128 * 1024, BufferStandard)]
-    [DataRow(128 * 1024, 8 * 1024, BufferContinuous)]
-    [DataRow(128 * 1024, 16 * 1024, BufferContinuous)]
-    [DataRow(128 * 1024, 64 * 1024, BufferContinuous)]
-    [DataRow(128 * 1024, 128 * 1024, BufferContinuous)]
+    [DataRow(128 * 1024, 8 * 1024, _bufferStandard)]
+    [DataRow(128 * 1024, 16 * 1024, _bufferStandard)]
+    [DataRow(128 * 1024, 64 * 1024, _bufferStandard)]
+    [DataRow(128 * 1024, 128 * 1024, _bufferStandard)]
+    [DataRow(128 * 1024, 8 * 1024, _bufferContinuous)]
+    [DataRow(128 * 1024, 16 * 1024, _bufferContinuous)]
+    [DataRow(128 * 1024, 64 * 1024, _bufferContinuous)]
+    [DataRow(128 * 1024, 128 * 1024, _bufferContinuous)]
     public void TestUnseekableStreamWrite(int size, int segment, int type)
     {
         var data = new byte[size];
@@ -258,14 +258,14 @@ public sealed class MemoryBufferTests
     }
 
     [DataTestMethod]
-    [DataRow(1024, 512, 1024, BufferStandard)]
-    [DataRow(1024, 512, 2048, BufferStandard)]
-    [DataRow(2048, 1024, 1024, BufferStandard)]
-    [DataRow(2048, 1536, 1024, BufferStandard)]
-    [DataRow(1024, 512, 1024, BufferContinuous)]
-    [DataRow(1024, 512, 2048, BufferContinuous)]
-    [DataRow(2048, 1024, 1024, BufferContinuous)]
-    [DataRow(2048, 1536, 1024, BufferContinuous)]
+    [DataRow(1024, 512, 1024, _bufferStandard)]
+    [DataRow(1024, 512, 2048, _bufferStandard)]
+    [DataRow(2048, 1024, 1024, _bufferStandard)]
+    [DataRow(2048, 1536, 1024, _bufferStandard)]
+    [DataRow(1024, 512, 1024, _bufferContinuous)]
+    [DataRow(1024, 512, 2048, _bufferContinuous)]
+    [DataRow(2048, 1024, 1024, _bufferContinuous)]
+    [DataRow(2048, 1536, 1024, _bufferContinuous)]
     public void TestReuse(int size1, int size2, int segment, int type)
     {
         var data = new byte[size1];
@@ -309,14 +309,14 @@ public sealed class MemoryBufferTests
     }
 
     [DataTestMethod]
-    [DataRow(128 * 1024, 8 * 1024, BufferStandard)]
-    [DataRow(128 * 1024, 16 * 1024, BufferStandard)]
-    [DataRow(128 * 1024, 64 * 1024, BufferStandard)]
-    [DataRow(128 * 1024, 128 * 1024, BufferStandard)]
-    [DataRow(128 * 1024, 8 * 1024, BufferContinuous)]
-    [DataRow(128 * 1024, 16 * 1024, BufferContinuous)]
-    [DataRow(128 * 1024, 64 * 1024, BufferContinuous)]
-    [DataRow(128 * 1024, 128 * 1024, BufferContinuous)]
+    [DataRow(128 * 1024, 8 * 1024, _bufferStandard)]
+    [DataRow(128 * 1024, 16 * 1024, _bufferStandard)]
+    [DataRow(128 * 1024, 64 * 1024, _bufferStandard)]
+    [DataRow(128 * 1024, 128 * 1024, _bufferStandard)]
+    [DataRow(128 * 1024, 8 * 1024, _bufferContinuous)]
+    [DataRow(128 * 1024, 16 * 1024, _bufferContinuous)]
+    [DataRow(128 * 1024, 64 * 1024, _bufferContinuous)]
+    [DataRow(128 * 1024, 128 * 1024, _bufferContinuous)]
     public void TestClearing(int size, int segment, int type)
     {
         var data = new byte[size];
@@ -345,14 +345,14 @@ public sealed class MemoryBufferTests
     }
 
     [DataTestMethod]
-    [DataRow(128 * 1024, 8 * 1024, BufferStandard)]
-    [DataRow(128 * 1024, 16 * 1024, BufferStandard)]
-    [DataRow(128 * 1024, 64 * 1024, BufferStandard)]
-    [DataRow(128 * 1024, 128 * 1024, BufferStandard)]
-    [DataRow(128 * 1024, 8 * 1024, BufferContinuous)]
-    [DataRow(128 * 1024, 16 * 1024, BufferContinuous)]
-    [DataRow(128 * 1024, 64 * 1024, BufferContinuous)]
-    [DataRow(128 * 1024, 128 * 1024, BufferContinuous)]
+    [DataRow(128 * 1024, 8 * 1024, _bufferStandard)]
+    [DataRow(128 * 1024, 16 * 1024, _bufferStandard)]
+    [DataRow(128 * 1024, 64 * 1024, _bufferStandard)]
+    [DataRow(128 * 1024, 128 * 1024, _bufferStandard)]
+    [DataRow(128 * 1024, 8 * 1024, _bufferContinuous)]
+    [DataRow(128 * 1024, 16 * 1024, _bufferContinuous)]
+    [DataRow(128 * 1024, 64 * 1024, _bufferContinuous)]
+    [DataRow(128 * 1024, 128 * 1024, _bufferContinuous)]
     public void TestArrayConversionI16(int size, int segment, int type)
     {
         var data = new short[size];
@@ -372,14 +372,14 @@ public sealed class MemoryBufferTests
     }
 
     [DataTestMethod]
-    [DataRow(128 * 1024, 8 * 1024, BufferStandard)]
-    [DataRow(128 * 1024, 16 * 1024, BufferStandard)]
-    [DataRow(128 * 1024, 64 * 1024, BufferStandard)]
-    [DataRow(128 * 1024, 128 * 1024, BufferStandard)]
-    [DataRow(128 * 1024, 8 * 1024, BufferContinuous)]
-    [DataRow(128 * 1024, 16 * 1024, BufferContinuous)]
-    [DataRow(128 * 1024, 64 * 1024, BufferContinuous)]
-    [DataRow(128 * 1024, 128 * 1024, BufferContinuous)]
+    [DataRow(128 * 1024, 8 * 1024, _bufferStandard)]
+    [DataRow(128 * 1024, 16 * 1024, _bufferStandard)]
+    [DataRow(128 * 1024, 64 * 1024, _bufferStandard)]
+    [DataRow(128 * 1024, 128 * 1024, _bufferStandard)]
+    [DataRow(128 * 1024, 8 * 1024, _bufferContinuous)]
+    [DataRow(128 * 1024, 16 * 1024, _bufferContinuous)]
+    [DataRow(128 * 1024, 64 * 1024, _bufferContinuous)]
+    [DataRow(128 * 1024, 128 * 1024, _bufferContinuous)]
     public void TestArrayConversionI32(int size, int segment, int type)
     {
         var data = new int[size];
@@ -399,14 +399,14 @@ public sealed class MemoryBufferTests
     }
 
     [DataTestMethod]
-    [DataRow(128 * 1024, 8 * 1024, BufferStandard)]
-    [DataRow(128 * 1024, 16 * 1024, BufferStandard)]
-    [DataRow(128 * 1024, 64 * 1024, BufferStandard)]
-    [DataRow(128 * 1024, 128 * 1024, BufferStandard)]
-    [DataRow(128 * 1024, 8 * 1024, BufferContinuous)]
-    [DataRow(128 * 1024, 16 * 1024, BufferContinuous)]
-    [DataRow(128 * 1024, 64 * 1024, BufferContinuous)]
-    [DataRow(128 * 1024, 128 * 1024, BufferContinuous)]
+    [DataRow(128 * 1024, 8 * 1024, _bufferStandard)]
+    [DataRow(128 * 1024, 16 * 1024, _bufferStandard)]
+    [DataRow(128 * 1024, 64 * 1024, _bufferStandard)]
+    [DataRow(128 * 1024, 128 * 1024, _bufferStandard)]
+    [DataRow(128 * 1024, 8 * 1024, _bufferContinuous)]
+    [DataRow(128 * 1024, 16 * 1024, _bufferContinuous)]
+    [DataRow(128 * 1024, 64 * 1024, _bufferContinuous)]
+    [DataRow(128 * 1024, 128 * 1024, _bufferContinuous)]
     public void TestArrayConversionI64(int size, int segment, int type)
     {
         var data = new long[size];
@@ -426,14 +426,14 @@ public sealed class MemoryBufferTests
     }
 
     [DataTestMethod]
-    [DataRow(128 * 1024, 8 * 1024, BufferStandard)]
-    [DataRow(128 * 1024, 16 * 1024, BufferStandard)]
-    [DataRow(128 * 1024, 64 * 1024, BufferStandard)]
-    [DataRow(128 * 1024, 128 * 1024, BufferStandard)]
-    [DataRow(128 * 1024, 8 * 1024, BufferContinuous)]
-    [DataRow(128 * 1024, 16 * 1024, BufferContinuous)]
-    [DataRow(128 * 1024, 64 * 1024, BufferContinuous)]
-    [DataRow(128 * 1024, 128 * 1024, BufferContinuous)]
+    [DataRow(128 * 1024, 8 * 1024, _bufferStandard)]
+    [DataRow(128 * 1024, 16 * 1024, _bufferStandard)]
+    [DataRow(128 * 1024, 64 * 1024, _bufferStandard)]
+    [DataRow(128 * 1024, 128 * 1024, _bufferStandard)]
+    [DataRow(128 * 1024, 8 * 1024, _bufferContinuous)]
+    [DataRow(128 * 1024, 16 * 1024, _bufferContinuous)]
+    [DataRow(128 * 1024, 64 * 1024, _bufferContinuous)]
+    [DataRow(128 * 1024, 128 * 1024, _bufferContinuous)]
     public void TestArrayConversionLarge(int size, int segment, int type)
     {
         var data = new ComplexType[size];
@@ -452,13 +452,36 @@ public sealed class MemoryBufferTests
         Assert.IsTrue(readouts.SequenceEqual(datas));
     }
 
+    [DataTestMethod]
+    [DataRow(128 * 1024, 8 * 1024)]
+    [DataRow(128 * 1024, 16 * 1024)]
+    [DataRow(128 * 1024, 64 * 1024)]
+    [DataRow(128 * 1024, 128 * 1024)]
+    public void TestUnderlyingBufferSpan(int size, int segment)
+    {
+        var data = new ComplexType[size];
+        var datas = data.AsSpan();
+        this.RNG.GetBytes(MemoryMarshal.AsBytes(datas));
+
+        using var buff = CreateMemoryBuffer<ComplexType>(_bufferContinuous, segment) as ContinuousMemoryBuffer<ComplexType>;
+        buff.Write(datas);
+
+        Assert.IsTrue(buff.Capacity >= (ulong)size);
+        Assert.AreEqual((ulong)size, buff.Count);
+
+        var typedReadout = buff.Span;
+        var rawReadout = buff.ByteSpan;
+        Assert.AreEqual(typedReadout.Length, buff.Count);
+        Assert.AreEqual(rawReadout.Length, buff.Length);
+    }
+
     [DebuggerDisplay("{DebuggerDisplay,nq}")]
     public struct ComplexType : IEquatable<ComplexType>
     {
         public double FirstValue { get; set; }
         public long SecondValue { get; set; }
 
-        public string DebuggerDisplay => $"{FirstValue}; {SecondValue}";
+        public string DebuggerDisplay => $"{this.FirstValue}; {this.SecondValue}";
 
         public bool Equals(ComplexType other)
             => ((double.IsNaN(this.FirstValue) && double.IsNaN(other.FirstValue)) || this.FirstValue == other.FirstValue) && this.SecondValue == other.SecondValue;

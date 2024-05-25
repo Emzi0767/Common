@@ -38,6 +38,16 @@ public sealed class ContinuousMemoryBuffer<T> : IMemoryBuffer<T> where T : unman
     /// <inheritdoc />
     public ulong Count => (ulong)(this._pos / this._itemSize);
 
+    /// <summary>
+    /// Gets a typed view of the underlying buffer, bounded by total number of items written so far.
+    /// </summary>
+    public ReadOnlySpan<T> Span => MemoryMarshal.Cast<byte, T>(this._buff.Span[..this._buff.Length]);
+
+    /// <summary>
+    /// Gets a byte view of the underlying buffer, bounded by total number of bytes written so far.
+    /// </summary>
+    public ReadOnlySpan<byte> ByteSpan => this._buff.Span[..this._buff.Length];
+
     private readonly MemoryPool<byte> _pool;
     private IMemoryOwner<byte> _buffOwner;
     private Memory<byte> _buff;
