@@ -304,7 +304,7 @@ public sealed class MemoryBufferTests
             var readouts = readout.AsSpan();
             buff.Read(readout.AsSpan(), 0, out var written);
             Assert.AreEqual(size2, written);
-            Assert.IsTrue(readouts.Slice(0, size2).SequenceEqual(datas.Slice(0, size2)));
+            Assert.IsTrue(readouts[..size2].SequenceEqual(datas[..size2]));
         }
     }
 

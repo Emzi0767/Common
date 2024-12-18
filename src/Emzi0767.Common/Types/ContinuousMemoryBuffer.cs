@@ -1,4 +1,4 @@
-﻿// This file is part of Emzi0767.Common project.
+// This file is part of Emzi0767.Common project.
 //
 // Copyright © 2020-2024 Emzi0767
 //
@@ -83,7 +83,7 @@ public sealed class ContinuousMemoryBuffer<T> : IMemoryBuffer<T> where T : unman
         var bytes = MemoryMarshal.AsBytes(data);
         this.EnsureSize(this._pos + bytes.Length);
 
-        bytes.CopyTo(this._buff.Slice(this._pos).Span);
+        bytes.CopyTo(this._buff[this._pos..].Span);
         this._pos += bytes.Length;
     }
 
@@ -113,52 +113,21 @@ public sealed class ContinuousMemoryBuffer<T> : IMemoryBuffer<T> where T : unman
             throw new ArgumentException("Stream is too long.", nameof(stream));
 
         this.EnsureSize(this._pos + (int)stream.Length);
-#if HAS_SPAN_STREAM_OVERLOADS
-        stream.Read(this._buff.Slice(this._pos).Span);
-#else
-        var memo = ArrayPool<byte>.Shared.Rent((int)stream.Length);
-        try
-        {
-            var br = stream.Read(memo, 0, memo.Length);
-            memo.AsSpan(0, br).CopyTo(this._buff.Slice(this._pos).Span);
-        }
-        finally
-        {
-            ArrayPool<byte>.Shared.Return(memo);
-        }
-#endif
+        stream.Read(this._buff[this._pos..].Span);
 
         this._pos += (int)stream.Length;
     }
 
     private void WriteStreamUnseekable(Stream stream)
     {
-#if HAS_SPAN_STREAM_OVERLOADS
         var br = 0;
         do
         {
             this.EnsureSize(this._pos + 4096);
-            br = stream.Read(this._buff.Slice(this._pos).Span);
+            br = stream.Read(this._buff[this._pos..].Span);
             this._pos += br;
         }
         while (br != 0);
-#else
-        var memo = ArrayPool<byte>.Shared.Rent(4096);
-        try
-        {
-            var br = 0;
-            while ((br = stream.Read(memo, 0, memo.Length)) != 0)
-            {
-                this.EnsureSize(this._pos + br);
-                memo.AsSpan(0, br).CopyTo(this._buff.Slice(this._pos).Span);
-                this._pos += br;
-            }
-        }
-        finally
-        {
-            ArrayPool<byte>.Shared.Return(memo);
-        }
-#endif
     }
 
     /// <inheritdoc />
@@ -173,15 +142,15 @@ public sealed class ContinuousMemoryBuffer<T> : IMemoryBuffer<T> where T : unman
             throw new ArgumentOutOfRangeException(nameof(source), "Cannot copy data from beyond the buffer.");
 
         var start = (int)source;
-        var sbuff = this._buff.Slice(start, this._pos - start).Span;
+        var sbuff = this._buff[start..this._pos ].Span;
         var dbuff = MemoryMarshal.AsBytes(destination);
         if (sbuff.Length > dbuff.Length)
-            sbuff = sbuff.Slice(0, dbuff.Length);
+            sbuff = sbuff[..dbuff.Length];
 
         itemsWritten = sbuff.Length / this._itemSize;
         sbuff.CopyTo(dbuff);
 
-        return (this.Length - source) != (ulong)itemsWritten;
+        return this.Length - source != (ulong)itemsWritten;
     }
 
     /// <inheritdoc />
@@ -198,7 +167,7 @@ public sealed class ContinuousMemoryBuffer<T> : IMemoryBuffer<T> where T : unman
         if (this._isDisposed)
             throw new ObjectDisposedException("This buffer is disposed.");
 
-        return MemoryMarshal.Cast<byte, T>(this._buff.Slice(0, this._pos).Span).ToArray();
+        return MemoryMarshal.Cast<byte, T>(this._buff[..this._pos].Span).ToArray();
     }
 
     /// <inheritdoc />
@@ -207,12 +176,7 @@ public sealed class ContinuousMemoryBuffer<T> : IMemoryBuffer<T> where T : unman
         if (this._isDisposed)
             throw new ObjectDisposedException("This buffer is disposed.");
 
-#if HAS_SPAN_STREAM_OVERLOADS
-        destination.Write(this._buff.Slice(0, this._pos).Span);
-#else
-        var buff = this._buff.Slice(0, this._pos).ToArray();
-        destination.Write(buff, 0, buff.Length);
-#endif
+        destination.Write(this._buff[..this._pos].Span);
     }
 
     /// <inheritdoc />

@@ -1,4 +1,4 @@
-﻿// This file is part of Emzi0767.Common project.
+// This file is part of Emzi0767.Common project.
 //
 // Copyright © 2020-2024 Emzi0767
 //
@@ -95,10 +95,10 @@ public sealed class MemoryBuffer<T> : IMemoryBuffer<T> where T : unmanaged
             avs = avs > src.Length
                 ? src.Length
                 : avs;
-            var dmem = mem.Slice(this._lastSegmentLength);
+            var dmem = mem[this._lastSegmentLength..];
 
-            src.Slice(0, avs).CopyTo(dmem.Span);
-            src = src.Slice(avs);
+            src[..avs].CopyTo(dmem.Span);
+            src = src[avs..];
 
             this.Length += (ulong)avs;
             this._lastSegmentLength += avs;
@@ -136,10 +136,6 @@ public sealed class MemoryBuffer<T> : IMemoryBuffer<T> where T : unmanaged
         var len = (int)(stream.Length - stream.Position);
         this.Grow(len);
 
-#if !HAS_SPAN_STREAM_OVERLOADS
-        var buff = new byte[this._segmentSize];
-#endif
-
         while (this._segNo < this._segments.Count && len > 0)
         {
             var seg = this._segments[this._segNo];
@@ -148,16 +144,9 @@ public sealed class MemoryBuffer<T> : IMemoryBuffer<T> where T : unmanaged
             avs = avs > len
                 ? len
                 : avs;
-            var dmem = mem.Slice(this._lastSegmentLength);
+            var dmem = mem[this._lastSegmentLength..];
 
-#if HAS_SPAN_STREAM_OVERLOADS
             stream.Read(dmem.Span);
-#else
-            var lsl = this._lastSegmentLength;
-            var slen = dmem.Span.Length - lsl;
-            stream.Read(buff, 0, slen);
-            buff.AsSpan(0, slen).CopyTo(dmem.Span);
-#endif
             len -= dmem.Span.Length;
 
             this.Length += (ulong)avs;
@@ -174,15 +163,9 @@ public sealed class MemoryBuffer<T> : IMemoryBuffer<T> where T : unmanaged
     private void WriteStreamUnseekable(Stream stream)
     {
         var read = 0;
-#if HAS_SPAN_STREAM_OVERLOADS
         Span<byte> buffs = stackalloc byte[this._segmentSize];
         while ((read = stream.Read(buffs)) != 0)
-#else
-        var buff = new byte[this._segmentSize];
-        var buffs = buff.AsSpan();
-        while ((read = stream.Read(buff, 0, buff.Length - this._lastSegmentLength)) != 0)
-#endif
-            this.Write(MemoryMarshal.Cast<byte, T>(buffs.Slice(0, read)));
+            this.Write(MemoryMarshal.Cast<byte, T>(buffs[..read]));
     }
 
     /// <inheritdoc />
@@ -220,23 +203,23 @@ public sealed class MemoryBuffer<T> : IMemoryBuffer<T> where T : unmanaged
 
             if (sri != 0)
             {
-                src = src.Slice(sri);
+                src = src[sri..];
                 sri = 0;
             }
 
             if (itemsWritten + src.Length > dl)
-                src = src.Slice(0, dl - itemsWritten);
+                src = src[..(dl - itemsWritten)];
 
             if (src.Length > dst.Length)
-                src = src.Slice(0, dst.Length);
+                src = src[..dst.Length];
 
             src.CopyTo(dst);
-            dst = dst.Slice(src.Length);
+            dst = dst[src.Length..];
             itemsWritten += src.Length;
         }
 
         itemsWritten /= this._itemSize;
-        return (this.Length - source) != (ulong)itemsWritten;
+        return this.Length - source != (ulong)itemsWritten;
     }
 
     /// <inheritdoc />
@@ -264,22 +247,8 @@ public sealed class MemoryBuffer<T> : IMemoryBuffer<T> where T : unmanaged
         if (this._isDisposed)
             throw new ObjectDisposedException("This buffer is disposed.");
 
-#if HAS_SPAN_STREAM_OVERLOADS
         foreach (var seg in this._segments)
             destination.Write(seg.Memory.Span);
-#else
-        var longest = this._segments.Max(x => x.Memory.Length);
-        var buff = new byte[longest];
-
-        foreach (var seg in this._segments)
-        {
-            var mem = seg.Memory.Span;
-            var spn = buff.AsSpan(0, mem.Length);
-
-            mem.CopyTo(spn);
-            destination.Write(buff, 0, spn.Length);
-        }
-#endif
     }
 
     /// <inheritdoc />
@@ -315,7 +284,7 @@ public sealed class MemoryBuffer<T> : IMemoryBuffer<T> where T : unmanaged
     {
         var capacity = this.Capacity;
         var length = this.Length;
-        var totalAmt = (length + (ulong)minAmount);
+        var totalAmt = length + (ulong)minAmount;
         if (capacity >= totalAmt)
             return; // we're good
 
