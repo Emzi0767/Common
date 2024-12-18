@@ -1,6 +1,6 @@
-﻿// This file is part of Emzi0767.Common project.
+// This file is part of Emzi0767.Common project.
 //
-// Copyright © 2020-2024 Emzi0767
+// Copyright © 2020-2025 Emzi0767
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Lesser General Public License as published by
@@ -24,7 +24,8 @@ namespace Emzi0767.Types;
 /// An interface describing the API of resizable memory buffers, such as <see cref="MemoryBuffer{T}"/> and <see cref="ContinuousMemoryBuffer{T}"/>.
 /// </summary>
 /// <typeparam name="T">Type of item to hold in the buffer.</typeparam>
-public interface IMemoryBuffer<T> : IDisposable where T : unmanaged
+public interface IMemoryBuffer<T> : IDisposable
+    where T : unmanaged
 {
     /// <summary>
     /// Gets the total capacity of this buffer. The capacity is the number of segments allocated, multiplied by size of individual segment.

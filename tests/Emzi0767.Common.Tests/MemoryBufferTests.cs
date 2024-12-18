@@ -1,6 +1,6 @@
 ﻿// This file is part of Emzi0767.Common project.
 //
-// Copyright © 2020-2024 Emzi0767
+// Copyright © 2020-2025 Emzi0767
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Lesser General Public License as published by

@@ -1,6 +1,6 @@
 // This file is part of Emzi0767.Common project.
 //
-// Copyright © 2020-2024 Emzi0767
+// Copyright © 2020-2025 Emzi0767
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Lesser General Public License as published by
@@ -29,7 +29,8 @@ namespace Emzi0767.Types;
 /// Provides a resizable memory buffer, which can be read from and written to. It will automatically resize whenever required.
 /// </summary>
 /// <typeparam name="T">Type of item to hold in the buffer.</typeparam>
-public sealed class MemoryBuffer<T> : IMemoryBuffer<T> where T : unmanaged
+public sealed class MemoryBuffer<T> : IMemoryBuffer<T>
+    where T : unmanaged
 {
     /// <inheritdoc />
     public ulong Capacity => this._segments.Aggregate(0UL, (a, x) => a + (ulong)x.Memory.Length); // .Sum() does only int
