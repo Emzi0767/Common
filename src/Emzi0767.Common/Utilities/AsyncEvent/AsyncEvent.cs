@@ -1,4 +1,4 @@
-﻿// This file is part of Emzi0767.Common project.
+// This file is part of Emzi0767.Common project.
 //
 // Copyright © 2020-2025 Emzi0767
 //
@@ -52,7 +52,7 @@ public sealed class AsyncEvent<TSender, TArgs> : AsyncEvent
     /// </summary>
     public TimeSpan MaximumExecutionTime { get; }
 
-    private readonly object _lock = new object();
+    private readonly object _lock = new();
     private ImmutableArray<AsyncEventHandler<TSender, TArgs>> _handlers;
     private readonly AsyncEventExceptionHandler<TSender, TArgs> _exceptionHandler;
 
@@ -77,8 +77,8 @@ public sealed class AsyncEvent<TSender, TArgs> : AsyncEvent
     /// <param name="handler">Handler to register for this event.</param>
     public void Register(AsyncEventHandler<TSender, TArgs> handler)
     {
-        if (handler == null)
-            throw new ArgumentNullException(nameof(handler));
+        if (handler is null)
+            ThrowHelper.ArgumentNull(nameof(handler));
 
         lock (this._lock)
             this._handlers = this._handlers.Add(handler);
@@ -90,8 +90,8 @@ public sealed class AsyncEvent<TSender, TArgs> : AsyncEvent
     /// <param name="handler">Handler to unregister from the event.</param>
     public void Unregister(AsyncEventHandler<TSender, TArgs> handler)
     {
-        if (handler == null)
-            throw new ArgumentNullException(nameof(handler));
+        if (handler is null)
+            ThrowHelper.ArgumentNull(nameof(handler));
 
         lock (this._lock)
             this._handlers = this._handlers.Remove(handler);
@@ -101,9 +101,7 @@ public sealed class AsyncEvent<TSender, TArgs> : AsyncEvent
     /// Unregisters all existing handlers from this event.
     /// </summary>
     public void UnregisterAll()
-    {
-        this._handlers = ImmutableArray<AsyncEventHandler<TSender, TArgs>>.Empty;
-    }
+        => this._handlers = ImmutableArray<AsyncEventHandler<TSender, TArgs>>.Empty;
 
     /// <summary>
     /// <para>Raises this event by invoking all of its registered handlers, in order of registration.</para>
@@ -133,7 +131,7 @@ public sealed class AsyncEvent<TSender, TArgs> : AsyncEvent
             {
                 // Start the handler execution
                 var handlerTask = handler(sender, e);
-                if (handlerTask != null && timeout != null)
+                if (handlerTask is not null && timeout is not null)
                 {
                     // If timeout is configured, wait for any task to finish
                     // If the timeout task finishes first, the handler is causing a timeout
@@ -153,7 +151,7 @@ public sealed class AsyncEvent<TSender, TArgs> : AsyncEvent
                     }
                 }
 
-                if (handlerTask != null)
+                if (handlerTask is not null)
                 {
                     // No timeout is configured, or timeout already expired, proceed as usual
                     await handlerTask.ConfigureAwait(false);
@@ -175,12 +173,12 @@ public sealed class AsyncEvent<TSender, TArgs> : AsyncEvent
         }
 
         if ((exceptionMode & AsyncEventExceptionMode.ThrowAll) != 0 && exceptions.Count > 0)
-            throw new AggregateException("Exceptions were thrown during execution of the event's handlers.", exceptions);
+            ThrowHelper.Aggregate("Exceptions were thrown during execution of the event's handlers.", exceptions);
     }
 
     private void HandleException(Exception ex, AsyncEventHandler<TSender, TArgs> handler, TSender sender, TArgs args)
     {
-        if (this._exceptionHandler != null)
+        if (this._exceptionHandler is not null)
             this._exceptionHandler(this, ex, handler, sender, args);
     }
 }

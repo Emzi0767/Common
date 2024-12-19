@@ -97,7 +97,7 @@ public sealed class AsyncExecutorTests
         }
 
         public static implicit operator ByRef<T>(T inst)
-            => new ByRef<T>(inst);
+            => new(inst);
     }
 
     private async Task NonFaultingVoidAsync(ByRef<int> value)

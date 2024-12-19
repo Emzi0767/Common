@@ -1,4 +1,4 @@
-﻿// This file is part of Emzi0767.Common project.
+// This file is part of Emzi0767.Common project.
 //
 // Copyright © 2020-2025 Emzi0767
 //
@@ -46,11 +46,11 @@ public class AsyncExecutor
         taskState.Lock.WaitOne();
 
         // check for and rethrow any exceptions
-        if (taskState.Exception != null)
-            throw taskState.Exception;
+        if (taskState.Exception is not null)
+            ThrowHelper.Instance(taskState.Exception);
 
         // completion method
-        void TaskCompletionHandler(Task t, object state)
+        static void TaskCompletionHandler(Task t, object state)
         {
             // retrieve state data
             var stateRef = state as StateRef<object>;
@@ -58,10 +58,9 @@ public class AsyncExecutor
             // retrieve any exceptions or cancellation status
             if (t.IsFaulted)
             {
-                if (t.Exception.InnerExceptions.Count == 1) // unwrap if 1
-                    stateRef.Exception = t.Exception.InnerException;
-                else
-                    stateRef.Exception = t.Exception;
+                stateRef.Exception = t.Exception.InnerExceptions.Count == 1
+                    ? t.Exception.InnerException
+                    : t.Exception;
             }
             else if (t.IsCanceled)
             {
@@ -89,18 +88,19 @@ public class AsyncExecutor
         taskState.Lock.WaitOne();
 
         // check for and rethrow any exceptions
-        if (taskState.Exception != null)
-            throw taskState.Exception;
+        if (taskState.Exception is not null)
+            ThrowHelper.Instance(taskState.Exception);
 
         // return the result, if any
         if (taskState.HasResult)
             return taskState.Result;
 
         // throw exception if no result
-        throw new Exception("Task returned no result.");
+        ThrowHelper.Instance(new TaskStateException(task, "Task returned no result."));
+        return default;
 
         // completion method
-        void TaskCompletionHandler(Task<T> t, object state)
+        static void TaskCompletionHandler(Task<T> t, object state)
         {
             // retrieve state data
             var stateRef = state as StateRef<T>;
@@ -108,10 +108,9 @@ public class AsyncExecutor
             // retrieve any exceptions or cancellation status
             if (t.IsFaulted)
             {
-                if (t.Exception.InnerExceptions.Count == 1) // unwrap if 1
-                    stateRef.Exception = t.Exception.InnerException;
-                else
-                    stateRef.Exception = t.Exception;
+                stateRef.Exception = t.Exception.InnerExceptions.Count == 1
+                    ? t.Exception.InnerException
+                    : t.Exception;
             }
             else if (t.IsCanceled)
             {
