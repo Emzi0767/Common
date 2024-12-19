@@ -1,4 +1,4 @@
-﻿// This file is part of Emzi0767.Common project.
+// This file is part of Emzi0767.Common project.
 //
 // Copyright © 2020-2025 Emzi0767
 //
@@ -119,7 +119,7 @@ public sealed class SecureRandom : Random, IDisposable
     public sbyte GetInt8(sbyte min = 0, sbyte max = sbyte.MaxValue)
     {
         if (max <= min)
-            throw new ArgumentException("Maximum needs to be greater than minimum.", nameof(max));
+            ThrowHelper.Argument(nameof(max), "Maximum needs to be greater than minimum.");
 
         var offset = (sbyte)(min < 0 ? -min : 0);
         min += offset;
@@ -137,7 +137,7 @@ public sealed class SecureRandom : Random, IDisposable
     public byte GetUInt8(byte min = 0, byte max = byte.MaxValue)
     {
         if (max <= min)
-            throw new ArgumentException("Maximum needs to be greater than minimum.", nameof(max));
+            ThrowHelper.Argument(nameof(max), "Maximum needs to be greater than minimum.");
 
         return (byte)(this.Generate<byte>() % (max - min) + min);
     }
@@ -151,7 +151,7 @@ public sealed class SecureRandom : Random, IDisposable
     public short GetInt16(short min = 0, short max = short.MaxValue)
     {
         if (max <= min)
-            throw new ArgumentException("Maximum needs to be greater than minimum.", nameof(max));
+            ThrowHelper.Argument(nameof(max), "Maximum needs to be greater than minimum.");
 
         var offset = (short)(min < 0 ? -min : 0);
         min += offset;
@@ -169,7 +169,7 @@ public sealed class SecureRandom : Random, IDisposable
     public ushort GetUInt16(ushort min = 0, ushort max = ushort.MaxValue)
     {
         if (max <= min)
-            throw new ArgumentException("Maximum needs to be greater than minimum.", nameof(max));
+            ThrowHelper.Argument(nameof(max), "Maximum needs to be greater than minimum.");
 
         return (ushort)(this.Generate<ushort>() % (max - min) + min);
     }
@@ -183,7 +183,7 @@ public sealed class SecureRandom : Random, IDisposable
     public int GetInt32(int min = 0, int max = int.MaxValue)
     {
         if (max <= min)
-            throw new ArgumentException("Maximum needs to be greater than minimum.", nameof(max));
+            ThrowHelper.Argument(nameof(max), "Maximum needs to be greater than minimum.");
 
         var offset = min < 0 ? -min : 0;
         min += offset;
@@ -201,7 +201,7 @@ public sealed class SecureRandom : Random, IDisposable
     public uint GetUInt32(uint min = 0, uint max = uint.MaxValue)
     {
         if (max <= min)
-            throw new ArgumentException("Maximum needs to be greater than minimum.", nameof(max));
+            ThrowHelper.Argument(nameof(max), "Maximum needs to be greater than minimum.");
 
         return this.Generate<uint>() % (max - min) + min;
     }
@@ -215,7 +215,7 @@ public sealed class SecureRandom : Random, IDisposable
     public long GetInt64(long min = 0, long max = long.MaxValue)
     {
         if (max <= min)
-            throw new ArgumentException("Maximum needs to be greater than minimum.", nameof(max));
+            ThrowHelper.Argument(nameof(max), "Maximum needs to be greater than minimum.");
 
         var offset = min < 0 ? -min : 0;
         min += offset;
@@ -233,7 +233,7 @@ public sealed class SecureRandom : Random, IDisposable
     public ulong GetUInt64(ulong min = 0, ulong max = ulong.MaxValue)
     {
         if (max <= min)
-            throw new ArgumentException("Maximum needs to be greater than minimum.", nameof(max));
+            ThrowHelper.Argument(nameof(max), "Maximum needs to be greater than minimum.");
 
         return this.Generate<ulong>() % (max - min) + min;
     }

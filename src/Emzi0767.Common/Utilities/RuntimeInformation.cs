@@ -37,13 +37,8 @@ public static class RuntimeInformation
     {
         var loadedAssemblies = AppDomain.CurrentDomain.GetAssemblies();
         var mscorlib = loadedAssemblies.Select(x => new { Assembly = x, AssemblyName = x.GetName() })
-            .FirstOrDefault(x => x.AssemblyName.Name == "mscorlib"
-#if NETCOREAPP || NETSTANDARD
-                 || x.AssemblyName.Name == "System.Private.CoreLib"
-#endif
-            );
+            .FirstOrDefault(x => x.AssemblyName.Name == "mscorlib" || x.AssemblyName.Name == "System.Private.CoreLib");
 
-#if NETCOREAPP || NETSTANDARD
         var location = mscorlib.Assembly.Location;
         var assemblyFile = new FileInfo(location);
         var versionFile = new FileInfo(Path.Combine(assemblyFile.Directory.FullName, ".version"));
@@ -57,10 +52,9 @@ public static class RuntimeInformation
                 return;
             }
         }
-#endif
 
         var infVersion = mscorlib.Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>();
-        if (infVersion != null)
+        if (infVersion is not null)
         {
             var infVersionString = infVersion.InformationalVersion;
             if (!string.IsNullOrWhiteSpace(infVersionString))

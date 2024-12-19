@@ -1,4 +1,4 @@
-﻿// This file is part of Emzi0767.Common project.
+// This file is part of Emzi0767.Common project.
 //
 // Copyright © 2020-2025 Emzi0767
 //
@@ -25,7 +25,7 @@ namespace Emzi0767;
 /// </summary>
 /// <typeparam name="T">Type of the value.</typeparam>
 [DebuggerDisplay(@"{DebuggerDisplay,nq}")]
-public struct Optional<T> : IEquatable<Optional<T>>, IEquatable<T>
+public readonly struct Optional<T> : IEquatable<Optional<T>>, IEquatable<T>
 {
     /// <summary>
     /// Gets an initialized instance of <see cref="Optional{T}"/> which has no value set.
@@ -77,7 +77,7 @@ public struct Optional<T> : IEquatable<Optional<T>>, IEquatable<T>
         if (obj is T val)
             return this.Equals(val);
 
-        if (!this.HasValue && obj == null)
+        if (!this.HasValue && obj is null)
             return true;
 
         if (this.HasValue)
@@ -108,7 +108,7 @@ public struct Optional<T> : IEquatable<Optional<T>>, IEquatable<T>
     /// <returns>Whether the supplied value is equal to the value of this property.</returns>
     public bool Equals(T other)
     {
-        if (!this.HasValue && other == null)
+        if (!this.HasValue && other is null)
             return true;
 
         if (this.HasValue)
@@ -130,7 +130,7 @@ public struct Optional<T> : IEquatable<Optional<T>>, IEquatable<T>
     /// </summary>
     /// <param name="value">Value to convert into an optional property.</param>
     public static implicit operator Optional<T>(T value)
-        => new Optional<T>(value);
+        => new(value);
 
     /// <summary>
     /// Compares two properties and returns whether they are equal.
@@ -197,7 +197,7 @@ public static class Optional
     /// <param name="value">Value to set the property to.</param>
     /// <returns>Created optional property, which has a specified value set.</returns>
     public static Optional<T> FromValue<T>(T value)
-        => new Optional<T>(value);
+        => new(value);
 
     /// <summary>
     /// Creates a new <see cref="Optional{T}"/> from a default value for type <typeparamref name="T"/>.
@@ -205,7 +205,7 @@ public static class Optional
     /// <typeparam name="T">Type of the value to create an optional property for.</typeparam>
     /// <returns>Created optional property, which has a default value for <typeparamref name="T"/> set.</returns>
     public static Optional<T> FromDefaultValue<T>()
-        => new Optional<T>(default);
+        => new(default);
 
     /// <summary>
     /// Creates a new <see cref="Optional{T}"/> which has no value.

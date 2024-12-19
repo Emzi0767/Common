@@ -1,4 +1,4 @@
-﻿// This file is part of Emzi0767.Common project.
+// This file is part of Emzi0767.Common project.
 //
 // Copyright © 2020-2025 Emzi0767
 //
@@ -32,6 +32,8 @@ namespace Emzi0767.Utilities;
 /// </summary>
 public static class ReflectionUtilities
 {
+    // disable warning; I'm aware the binary formatter stuff is obsolete, but we're not using it for ser/des
+#pragma warning disable SYSLIB0050
     /// <summary>
     /// <para>Creates an empty, uninitialized instance of specified type.</para>
     /// <para>This method will not call the constructor for the specified type. As such, the object might not be properly initialized.</para>
@@ -43,6 +45,7 @@ public static class ReflectionUtilities
     /// <returns>Empty, uninitialized object of specified type.</returns>
     public static object CreateEmpty(this Type t)
         => FormatterServices.GetUninitializedObject(t);
+#pragma warning restore SYSLIB0050
 
     /// <summary>
     /// <para>Creates an empty, uninitialized instance of type <typeparamref name="T"/>.</para>
@@ -54,7 +57,7 @@ public static class ReflectionUtilities
     /// <typeparam name="T">Type of the object to instantiate.</typeparam>
     /// <returns>Empty, uninitalized object of specified type.</returns>
     public static T CreateEmpty<T>()
-        => (T)FormatterServices.GetUninitializedObject(typeof(T));
+        => (T)CreateEmpty(typeof(T));
 
     /// <summary>
     /// Converts a given object into a dictionary of property name to property value mappings. This method supports
@@ -70,9 +73,9 @@ public static class ReflectionUtilities
     /// <returns>Converted dictionary.</returns>
     public static IReadOnlyDictionary<string, object> ToDictionary<T>(this T obj, bool useCachedModel = false)
     {
-        if (obj == null)
-            throw new NullReferenceException();
-        
+        if (obj is null)
+            ThrowHelper.NullReference();
+
         var t = obj.GetType(); // T might not be equal
         if (useCachedModel)
         {
@@ -94,7 +97,7 @@ public static class ReflectionUtilities
     {
         var t = typeof(T);
         var props = t.GetProperties(BindingFlags.Public | BindingFlags.Instance)
-            .Where(x => x.GetMethod != null && x.GetCustomAttribute<CompilerGeneratedAttribute>() == null);
+            .Where(x => x.GetMethod is not null && x.GetCustomAttribute<CompilerGeneratedAttribute>() is null);
 
         foreach (var prop in props)
         {
