@@ -19,7 +19,9 @@ using System;
 using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using System.Text;
 using Emzi0767.Types;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -472,6 +474,123 @@ public sealed class MemoryBufferTests
         var rawReadout = buff.ByteSpan;
         Assert.AreEqual((ulong)typedReadout.Length, buff.Count);
         Assert.AreEqual((ulong)rawReadout.Length, buff.Length);
+    }
+
+    [DataTestMethod]
+    [DataRow(128 * 1024, 8 * 1024, 4 * 1024, _bufferStandard)]
+    [DataRow(128 * 1024, 8 * 1024, 6 * 1024, _bufferStandard)]
+    [DataRow(128 * 1024, 8 * 1024, 8 * 1024, _bufferStandard)]
+    [DataRow(128 * 1024, 8 * 1024, 16 * 1024, _bufferStandard)]
+    [DataRow(128 * 1024, 16 * 1024, 8 * 1024, _bufferStandard)]
+    [DataRow(128 * 1024, 16 * 1024, 12 * 1024, _bufferStandard)]
+    [DataRow(128 * 1024, 16 * 1024, 16 * 1024, _bufferStandard)]
+    [DataRow(128 * 1024, 16 * 1024, 32 * 1024, _bufferStandard)]
+    [DataRow(128 * 1024, 64 * 1024, 32 * 1024, _bufferStandard)]
+    [DataRow(128 * 1024, 64 * 1024, 48 * 1024, _bufferStandard)]
+    [DataRow(128 * 1024, 64 * 1024, 64 * 1024, _bufferStandard)]
+    [DataRow(128 * 1024, 64 * 1024, 128 * 1024, _bufferStandard)]
+    [DataRow(128 * 1024, 128 * 1024, 32 * 1024, _bufferStandard)]
+    [DataRow(128 * 1024, 128 * 1024, 48 * 1024, _bufferStandard)]
+    [DataRow(128 * 1024, 128 * 1024, 64 * 1024, _bufferStandard)]
+    [DataRow(128 * 1024, 128 * 1024, 128 * 1024, _bufferStandard)]
+    [DataRow(128 * 1024, 8 * 1024, 4 * 1024, _bufferContinuous)]
+    [DataRow(128 * 1024, 8 * 1024, 8 * 1024, _bufferContinuous)]
+    [DataRow(128 * 1024, 8 * 1024, 16 * 1024, _bufferContinuous)]
+    [DataRow(128 * 1024, 16 * 1024, 8 * 1024, _bufferContinuous)]
+    [DataRow(128 * 1024, 16 * 1024, 16 * 1024, _bufferContinuous)]
+    [DataRow(128 * 1024, 16 * 1024, 32 * 1024, _bufferContinuous)]
+    [DataRow(128 * 1024, 64 * 1024, 32 * 1024, _bufferContinuous)]
+    [DataRow(128 * 1024, 64 * 1024, 64 * 1024, _bufferContinuous)]
+    [DataRow(128 * 1024, 64 * 1024, 128 * 1024, _bufferContinuous)]
+    [DataRow(128 * 1024, 128 * 1024, 32 * 1024, _bufferContinuous)]
+    [DataRow(128 * 1024, 128 * 1024, 64 * 1024, _bufferContinuous)]
+    [DataRow(128 * 1024, 128 * 1024, 128 * 1024, _bufferContinuous)]
+    public void TestBufferWriterInterfaceSpan(int size, int segment, int chunk, int type)
+    {
+        var data = new ComplexType[size];
+        var datas = data.AsSpan();
+        this.RNG.GetBytes(MemoryMarshal.AsBytes(datas));
+
+        using var buff = CreateMemoryBuffer<ComplexType>(type, segment);
+        for (var i = 0; i < size; i += chunk)
+        {
+            var actual = i + chunk <= datas.Length ? chunk : datas.Length - i;
+            var span = buff.GetSpan(actual);
+            datas.Slice(i, actual).CopyTo(span);
+            buff.Advance(actual);
+        }
+
+        Assert.IsTrue(buff.Capacity >= (ulong)size);
+        Assert.AreEqual((ulong)size, buff.Count);
+
+        var readout = buff.ToArray();
+        var readouts = readout.AsSpan();
+        Assert.AreEqual(size, readout.Length);
+        Assert.IsTrue(readouts.SequenceEqual(datas));
+    }
+
+    [DataTestMethod]
+    [DataRow(128 * 1024, 8 * 1024, 4 * 1024, _bufferStandard)]
+    [DataRow(128 * 1024, 8 * 1024, 6 * 1024, _bufferStandard)]
+    [DataRow(128 * 1024, 8 * 1024, 8 * 1024, _bufferStandard)]
+    [DataRow(128 * 1024, 8 * 1024, 16 * 1024, _bufferStandard)]
+    [DataRow(128 * 1024, 16 * 1024, 8 * 1024, _bufferStandard)]
+    [DataRow(128 * 1024, 16 * 1024, 12 * 1024, _bufferStandard)]
+    [DataRow(128 * 1024, 16 * 1024, 16 * 1024, _bufferStandard)]
+    [DataRow(128 * 1024, 16 * 1024, 32 * 1024, _bufferStandard)]
+    [DataRow(128 * 1024, 64 * 1024, 32 * 1024, _bufferStandard)]
+    [DataRow(128 * 1024, 64 * 1024, 48 * 1024, _bufferStandard)]
+    [DataRow(128 * 1024, 64 * 1024, 64 * 1024, _bufferStandard)]
+    [DataRow(128 * 1024, 64 * 1024, 128 * 1024, _bufferStandard)]
+    [DataRow(128 * 1024, 128 * 1024, 32 * 1024, _bufferStandard)]
+    [DataRow(128 * 1024, 128 * 1024, 48 * 1024, _bufferStandard)]
+    [DataRow(128 * 1024, 128 * 1024, 64 * 1024, _bufferStandard)]
+    [DataRow(128 * 1024, 128 * 1024, 128 * 1024, _bufferStandard)]
+    [DataRow(128 * 1024, 8 * 1024, 4 * 1024, _bufferContinuous)]
+    [DataRow(128 * 1024, 8 * 1024, 8 * 1024, _bufferContinuous)]
+    [DataRow(128 * 1024, 8 * 1024, 16 * 1024, _bufferContinuous)]
+    [DataRow(128 * 1024, 16 * 1024, 8 * 1024, _bufferContinuous)]
+    [DataRow(128 * 1024, 16 * 1024, 16 * 1024, _bufferContinuous)]
+    [DataRow(128 * 1024, 16 * 1024, 32 * 1024, _bufferContinuous)]
+    [DataRow(128 * 1024, 64 * 1024, 32 * 1024, _bufferContinuous)]
+    [DataRow(128 * 1024, 64 * 1024, 64 * 1024, _bufferContinuous)]
+    [DataRow(128 * 1024, 64 * 1024, 128 * 1024, _bufferContinuous)]
+    [DataRow(128 * 1024, 128 * 1024, 32 * 1024, _bufferContinuous)]
+    [DataRow(128 * 1024, 128 * 1024, 64 * 1024, _bufferContinuous)]
+    [DataRow(128 * 1024, 128 * 1024, 128 * 1024, _bufferContinuous)]
+    public void TextMixedModeWrites(int size, int segment, int chunk, int type)
+    {
+        var data = new ComplexType[size];
+        var datas = data.AsSpan();
+        this.RNG.GetBytes(MemoryMarshal.AsBytes(datas));
+
+        using var buff = CreateMemoryBuffer<ComplexType>(type, segment);
+        var counter = 0;
+        for (var i = 0; i < size; i += chunk)
+        {
+            var actual = i + chunk <= datas.Length ? chunk : datas.Length - i;
+            var src = datas.Slice(i, actual);
+            if (counter % 2 == 0)
+            {
+                var span = buff.GetSpan(actual);
+                src.CopyTo(span);
+                buff.Advance(actual);
+            }
+            else
+            {
+                buff.Write(src);
+            }
+
+            ++counter;
+        }
+
+        Assert.IsTrue(buff.Capacity >= (ulong)size);
+        Assert.AreEqual((ulong)size, buff.Count);
+
+        var readout = buff.ToArray();
+        var readouts = readout.AsSpan();
+        Assert.AreEqual(size, readout.Length);
+        Assert.IsTrue(readouts.SequenceEqual(datas));
     }
 
     [DebuggerDisplay("{DebuggerDisplay,nq}")]

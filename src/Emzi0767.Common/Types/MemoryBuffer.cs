@@ -46,7 +46,7 @@ public sealed class MemoryBuffer<T> : IMemoryBuffer<T>
     private int _lastSegmentLength;
     private int _segNo;
     private readonly bool _clear;
-    private readonly List<IMemoryOwner<byte>> _segments;
+    private readonly List<MemoryOwnerInfo> _segments;
     private readonly int _itemSize;
     private bool _isDisposed;
 
@@ -61,7 +61,7 @@ public sealed class MemoryBuffer<T> : IMemoryBuffer<T>
     {
         this._itemSize = Unsafe.SizeOf<T>();
         if (segmentSize % this._itemSize != 0)
-            throw new ArgumentException("Segment size must match size of individual item.");
+            ThrowHelper.Argument(nameof(segmentSize), "Segment size must match size of individual item.");
 
         this._pool = memPool ?? MemoryPool<byte>.Shared;
 
@@ -70,9 +70,9 @@ public sealed class MemoryBuffer<T> : IMemoryBuffer<T>
         this._lastSegmentLength = 0;
         this._clear = clearOnDispose;
 
-        this._segments = new List<IMemoryOwner<byte>>(initialSegmentCount + 1);
+        this._segments = new List<MemoryOwnerInfo>(initialSegmentCount + 1);
         for (var i = 0; i < initialSegmentCount; i++)
-            this._segments.Add(this._pool.Rent(this._segmentSize));
+            this._segments.Add(new(this._pool.Rent(this._segmentSize)));
 
         this.Length = 0;
 
@@ -83,7 +83,7 @@ public sealed class MemoryBuffer<T> : IMemoryBuffer<T>
     public void Write(ReadOnlySpan<T> data)
     {
         if (this._isDisposed)
-            throw new ObjectDisposedException("This buffer is disposed.");
+            ThrowHelper.BufferDisposed();
 
         var src = MemoryMarshal.AsBytes(data);
         this.Grow(src.Length);
@@ -124,7 +124,7 @@ public sealed class MemoryBuffer<T> : IMemoryBuffer<T>
     public void Write(Stream stream)
     {
         if (this._isDisposed)
-            throw new ObjectDisposedException("This buffer is disposed.");
+            ThrowHelper.BufferDisposed();
 
         if (stream.CanSeek)
             this.WriteStreamSeekable(stream);
@@ -174,11 +174,11 @@ public sealed class MemoryBuffer<T> : IMemoryBuffer<T>
     {
         itemsWritten = 0;
         if (this._isDisposed)
-            throw new ObjectDisposedException("This buffer is disposed.");
+            ThrowHelper.BufferDisposed();
 
         source *= (ulong)this._itemSize;
         if (source > this.Count)
-            throw new ArgumentOutOfRangeException(nameof(source), "Cannot copy data from beyond the buffer.");
+            ThrowHelper.ArgumentOutOfRange(nameof(source), "Cannot copy data from beyond the buffer.");
 
         // Find where to begin
         var i = 0;
@@ -235,7 +235,7 @@ public sealed class MemoryBuffer<T> : IMemoryBuffer<T>
     public T[] ToArray()
     {
         if (this._isDisposed)
-            throw new ObjectDisposedException("This buffer is disposed.");
+            ThrowHelper.BufferDisposed();
 
         var bytes = new T[this.Count];
         this.Read(bytes, 0, out _);
@@ -246,7 +246,7 @@ public sealed class MemoryBuffer<T> : IMemoryBuffer<T>
     public void CopyTo(Stream destination)
     {
         if (this._isDisposed)
-            throw new ObjectDisposedException("This buffer is disposed.");
+            ThrowHelper.BufferDisposed();
 
         foreach (var seg in this._segments)
             destination.Write(seg.Memory.Span);
@@ -256,7 +256,7 @@ public sealed class MemoryBuffer<T> : IMemoryBuffer<T>
     public void Clear()
     {
         if (this._isDisposed)
-            throw new ObjectDisposedException("This buffer is disposed.");
+            ThrowHelper.BufferDisposed();
 
         this._segNo = 0;
         this._lastSegmentLength = 0;
@@ -281,6 +281,48 @@ public sealed class MemoryBuffer<T> : IMemoryBuffer<T>
         }
     }
 
+    // TODO
+    void IBufferWriter<T>.Advance(int count)
+    {
+        if (this._segNo >= this._segments.Count)
+            ThrowHelper.InvalidOperation("Cannot advance past the end of the buffer.");
+
+        var length = count * this._itemSize;
+        var seg = this._segments[this._segNo];
+        if (length + this._lastSegmentLength > seg.Length)
+            ThrowHelper.ArgumentOutOfRange(nameof(count), "Cannot advance past end of buffer segment.");
+
+        this.Length += (ulong)length;
+        this._lastSegmentLength += length;
+        if (this._lastSegmentLength == seg.Length)
+        {
+            this._segNo++;
+            this._lastSegmentLength = 0;
+        }
+    }
+
+    Memory<T> IBufferWriter<T>.GetMemory(int sizeHint)
+        => throw new NotImplementedException();
+
+    Span<T> IBufferWriter<T>.GetSpan(int sizeHint)
+    {
+        var length = sizeHint * this._itemSize;
+        if (this._segNo >= this._segments.Count)
+            this._segments.Add(new(this._pool.Rent(length)));
+
+        var seg = this._segments[this._segNo];
+        if (length + this._lastSegmentLength <= seg.Length)
+            return MemoryMarshal.Cast<byte, T>(seg.Memory.Span[this._lastSegmentLength..]);
+
+        seg.Length = this._lastSegmentLength;
+        this._segNo++;
+        this._lastSegmentLength = 0;
+        var owner = this._pool.Rent(length);
+        this._segments.Add(new(owner));
+
+        return MemoryMarshal.Cast<byte, T>(owner.Memory.Span);
+    }
+
     private void Grow(int minAmount)
     {
         var capacity = this.Capacity;
@@ -303,6 +345,49 @@ public sealed class MemoryBuffer<T> : IMemoryBuffer<T>
                 : segCap;
 
         for (var i = 0; i < segCount; i++)
-            this._segments.Add(this._pool.Rent(this._segmentSize));
+            this._segments.Add(new(this._pool.Rent(this._segmentSize)));
+    }
+
+    private sealed class MemoryOwnerInfo : IDisposable
+    {
+        public Memory<byte> Memory
+            => this._owner.Memory.Slice(this.Offset, this.Length);
+
+        public int Offset
+        {
+            get => this._offset;
+            set
+            {
+                if (value < 0 || value > this._owner.Memory.Length - this._length)
+                    ThrowHelper.ArgumentOutOfRange(nameof(value));
+
+                this._offset = value;
+            }
+        }
+
+        public int Length
+        {
+            get => this._length;
+            set
+            {
+                if (value < 0 || value > this._owner.Memory.Length - this._offset)
+                    ThrowHelper.ArgumentOutOfRange(nameof(value));
+
+                this._length = value;
+            }
+        }
+
+        private readonly IMemoryOwner<byte> _owner;
+        private int _offset, _length;
+
+        public MemoryOwnerInfo(IMemoryOwner<byte> owner)
+        {
+            this._owner = owner;
+            this.Offset = 0;
+            this.Length = owner.Memory.Length;
+        }
+
+        public void Dispose()
+            => this._owner.Dispose();
     }
 }

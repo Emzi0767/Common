@@ -42,12 +42,12 @@ public sealed class ContinuousMemoryBuffer<T> : IMemoryBuffer<T>
     /// <summary>
     /// Gets a typed view of the underlying buffer, bounded by total number of items written so far.
     /// </summary>
-    public ReadOnlySpan<T> Span => MemoryMarshal.Cast<byte, T>(this._buff.Span[..this._buff.Length]);
+    public ReadOnlySpan<T> Span => MemoryMarshal.Cast<byte, T>(this._buff.Span[..(int)this.Length]);
 
     /// <summary>
     /// Gets a byte view of the underlying buffer, bounded by total number of bytes written so far.
     /// </summary>
-    public ReadOnlySpan<byte> ByteSpan => this._buff.Span[..this._buff.Length];
+    public ReadOnlySpan<byte> ByteSpan => this._buff.Span[..(int)this.Length];
 
     private readonly MemoryPool<byte> _pool;
     private IMemoryOwner<byte> _buffOwner;
@@ -79,7 +79,7 @@ public sealed class ContinuousMemoryBuffer<T> : IMemoryBuffer<T>
     public void Write(ReadOnlySpan<T> data)
     {
         if (this._isDisposed)
-            throw new ObjectDisposedException("This buffer is disposed.");
+            ThrowHelper.BufferDisposed();
 
         var bytes = MemoryMarshal.AsBytes(data);
         this.EnsureSize(this._pos + bytes.Length);
@@ -100,7 +100,7 @@ public sealed class ContinuousMemoryBuffer<T> : IMemoryBuffer<T>
     public void Write(Stream stream)
     {
         if (this._isDisposed)
-            throw new ObjectDisposedException("This buffer is disposed.");
+            ThrowHelper.BufferDisposed();
 
         if (stream.CanSeek)
             this.WriteStreamSeekable(stream);
@@ -111,7 +111,7 @@ public sealed class ContinuousMemoryBuffer<T> : IMemoryBuffer<T>
     private void WriteStreamSeekable(Stream stream)
     {
         if (stream.Length > int.MaxValue)
-            throw new ArgumentException("Stream is too long.", nameof(stream));
+            ThrowHelper.Argument(nameof(stream), "Stream is too long.");
 
         this.EnsureSize(this._pos + (int)stream.Length);
         stream.Read(this._buff[this._pos..].Span);
@@ -136,11 +136,11 @@ public sealed class ContinuousMemoryBuffer<T> : IMemoryBuffer<T>
     {
         itemsWritten = 0;
         if (this._isDisposed)
-            throw new ObjectDisposedException("This buffer is disposed.");
+            ThrowHelper.BufferDisposed();
 
         source *= (ulong)this._itemSize;
         if (source > this.Count)
-            throw new ArgumentOutOfRangeException(nameof(source), "Cannot copy data from beyond the buffer.");
+            ThrowHelper.ArgumentOutOfRange(nameof(source), "Cannot copy data from beyond the buffer.");
 
         var start = (int)source;
         var sbuff = this._buff[start..this._pos ].Span;
@@ -166,7 +166,7 @@ public sealed class ContinuousMemoryBuffer<T> : IMemoryBuffer<T>
     public T[] ToArray()
     {
         if (this._isDisposed)
-            throw new ObjectDisposedException("This buffer is disposed.");
+            ThrowHelper.BufferDisposed();
 
         return MemoryMarshal.Cast<byte, T>(this._buff[..this._pos].Span).ToArray();
     }
@@ -175,7 +175,7 @@ public sealed class ContinuousMemoryBuffer<T> : IMemoryBuffer<T>
     public void CopyTo(Stream destination)
     {
         if (this._isDisposed)
-            throw new ObjectDisposedException("This buffer is disposed.");
+            ThrowHelper.BufferDisposed();
 
         destination.Write(this._buff[..this._pos].Span);
     }
@@ -184,7 +184,7 @@ public sealed class ContinuousMemoryBuffer<T> : IMemoryBuffer<T>
     public void Clear()
     {
         if (this._isDisposed)
-            throw new ObjectDisposedException("This buffer is disposed.");
+            ThrowHelper.BufferDisposed();
 
         this._pos = 0;
     }
@@ -203,6 +203,21 @@ public sealed class ContinuousMemoryBuffer<T> : IMemoryBuffer<T>
 
         this._buffOwner.Dispose();
         this._buff = default;
+    }
+
+    void IBufferWriter<T>.Advance(int count)
+        => this._pos += count * this._itemSize;
+
+    Memory<T> IBufferWriter<T>.GetMemory(int sizeHint)
+    {
+        ThrowHelper.NotSupported();
+        return Memory<T>.Empty;
+    }
+
+    Span<T> IBufferWriter<T>.GetSpan(int sizeHint)
+    {
+        this.EnsureSize(this._pos + (sizeHint * this._itemSize));
+        return MemoryMarshal.Cast<byte, T>(this._buff[this._pos..].Span);
     }
 
     private void EnsureSize(int newCapacity)

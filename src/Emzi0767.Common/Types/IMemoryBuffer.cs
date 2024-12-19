@@ -16,6 +16,7 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 using System;
+using System.Buffers;
 using System.IO;
 
 namespace Emzi0767.Types;
@@ -24,7 +25,7 @@ namespace Emzi0767.Types;
 /// An interface describing the API of resizable memory buffers, such as <see cref="MemoryBuffer{T}"/> and <see cref="ContinuousMemoryBuffer{T}"/>.
 /// </summary>
 /// <typeparam name="T">Type of item to hold in the buffer.</typeparam>
-public interface IMemoryBuffer<T> : IDisposable
+public interface IMemoryBuffer<T> : IBufferWriter<T>, IDisposable
     where T : unmanaged
 {
     /// <summary>
@@ -38,7 +39,7 @@ public interface IMemoryBuffer<T> : IDisposable
     ulong Length { get; }
 
     /// <summary>
-    /// Gets the number of items currently written to the buffer. This number is equal to <see cref="Count"/> divided by size of <typeparamref name="T"/>.
+    /// Gets the number of items currently written to the buffer. This number is equal to <see cref="Length"/> divided by size of <typeparamref name="T"/>.
     /// </summary>
     ulong Count { get; }
 
@@ -69,8 +70,8 @@ public interface IMemoryBuffer<T> : IDisposable
     void Write(Stream stream);
 
     /// <summary>
-    /// Reads data from this buffer to the specified destination buffer. This method will write either as many 
-    /// bytes as there are in the destination buffer, or however many bytes are available in this buffer, 
+    /// Reads data from this buffer to the specified destination buffer. This method will write either as many
+    /// bytes as there are in the destination buffer, or however many bytes are available in this buffer,
     /// whichever is less.
     /// </summary>
     /// <param name="destination">Buffer to read the data from this buffer into.</param>
@@ -80,8 +81,8 @@ public interface IMemoryBuffer<T> : IDisposable
     bool Read(Span<T> destination, ulong source, out int itemsWritten);
 
     /// <summary>
-    /// Reads data from this buffer to specified destination array. This method will write either as many bytes 
-    /// as specified for the destination array, or however many bytes are available in this buffer, whichever is 
+    /// Reads data from this buffer to specified destination array. This method will write either as many bytes
+    /// as specified for the destination array, or however many bytes are available in this buffer, whichever is
     /// less.
     /// </summary>
     /// <param name="data">Array to read the data from this buffer into.</param>
@@ -93,8 +94,8 @@ public interface IMemoryBuffer<T> : IDisposable
     bool Read(T[] data, int start, int count, ulong source, out int itemsWritten);
 
     /// <summary>
-    /// Reads data from this buffer to specified destination array slice. This method will write either as many 
-    /// bytes as specified in the target slice, or however many bytes are available in this buffer, whichever is 
+    /// Reads data from this buffer to specified destination array slice. This method will write either as many
+    /// bytes as specified in the target slice, or however many bytes are available in this buffer, whichever is
     /// less.
     /// </summary>
     /// <param name="data"></param>

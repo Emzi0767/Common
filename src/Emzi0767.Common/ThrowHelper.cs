@@ -56,6 +56,9 @@ internal static class ThrowHelper
     public static void DuplicateKey()
         => throw new DuplicateKeyException();
 
+    public static void InvalidOperation(string msg)
+        => throw new InvalidOperationException(msg);
+
     public static void Instance(Exception ex)
         => throw ex;
 }
