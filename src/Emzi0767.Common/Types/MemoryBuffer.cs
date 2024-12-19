@@ -281,7 +281,6 @@ public sealed class MemoryBuffer<T> : IMemoryBuffer<T>
         }
     }
 
-    // TODO
     void IBufferWriter<T>.Advance(int count)
     {
         if (this._segNo >= this._segments.Count)
@@ -302,7 +301,10 @@ public sealed class MemoryBuffer<T> : IMemoryBuffer<T>
     }
 
     Memory<T> IBufferWriter<T>.GetMemory(int sizeHint)
-        => throw new NotImplementedException();
+    {
+        ThrowHelper.NotSupported();
+        return Memory<T>.Empty;
+    }
 
     Span<T> IBufferWriter<T>.GetSpan(int sizeHint)
     {
