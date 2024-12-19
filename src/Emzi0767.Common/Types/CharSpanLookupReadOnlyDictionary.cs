@@ -53,11 +53,11 @@ public sealed class CharSpanLookupReadOnlyDictionary<TValue> : IReadOnlyDictiona
     {
         get
         {
-            if (key == null)
-                throw new ArgumentNullException(nameof(key));
+            if (key is null)
+                ThrowHelper.ArgumentNull(nameof(key));
 
             if (!this.TryRetrieveInternal(key.AsSpan(), out var value))
-                throw new KeyNotFoundException($"The given key '{key}' was not present in the dictionary.");
+                ThrowHelper.KeyNotFound();
 
             return value;
         }
@@ -73,7 +73,7 @@ public sealed class CharSpanLookupReadOnlyDictionary<TValue> : IReadOnlyDictiona
         get
         {
             if (!this.TryRetrieveInternal(key, out var value))
-                throw new KeyNotFoundException($"The given key was not present in the dictionary.");
+                ThrowHelper.KeyNotFound();
 
             return value;
         }
@@ -115,8 +115,8 @@ public sealed class CharSpanLookupReadOnlyDictionary<TValue> : IReadOnlyDictiona
     /// <returns>Whether the operation was successful.</returns>
     public bool TryGetValue(string key, out TValue value)
     {
-        if (key == null)
-            throw new ArgumentNullException(nameof(key));
+        if (key is null)
+            ThrowHelper.ArgumentNull(nameof(key));
 
         return this.TryRetrieveInternal(key.AsSpan(), out value);
     }
@@ -164,7 +164,7 @@ public sealed class CharSpanLookupReadOnlyDictionary<TValue> : IReadOnlyDictiona
         if (!this.InternalBuckets.TryGetValue(hash, out var kdv))
             return false;
 
-        while (kdv != null)
+        while (kdv is not null)
         {
             if (key.SequenceEqual(kdv.Key.AsSpan()))
             {
@@ -182,7 +182,7 @@ public sealed class CharSpanLookupReadOnlyDictionary<TValue> : IReadOnlyDictiona
         if (!this.InternalBuckets.TryGetValue(hash, out var kdv))
             return false;
 
-        while (kdv != null)
+        while (kdv is not null)
         {
             if (key.SequenceEqual(kdv.Key.AsSpan()))
                 return true;
@@ -199,7 +199,7 @@ public sealed class CharSpanLookupReadOnlyDictionary<TValue> : IReadOnlyDictiona
         foreach (var value in this.InternalBuckets.Values)
         {
             var kdv = value;
-            while (kdv != null)
+            while (kdv is not null)
             {
                 builder.Add(kdv.Key);
                 kdv = kdv.Next;
@@ -215,7 +215,7 @@ public sealed class CharSpanLookupReadOnlyDictionary<TValue> : IReadOnlyDictiona
         foreach (var value in this.InternalBuckets.Values)
         {
             var kdv = value;
-            while (kdv != null)
+            while (kdv is not null)
             {
                 builder.Add(kdv.Value);
                 kdv = kdv.Next;
@@ -231,8 +231,8 @@ public sealed class CharSpanLookupReadOnlyDictionary<TValue> : IReadOnlyDictiona
         var dict = new Dictionary<ulong, KeyedValue>();
         foreach (var (k, v) in items)
         {
-            if (k == null)
-                throw new ArgumentException("Keys cannot be null.", nameof(items));
+            if (k is null)
+                ThrowHelper.Argument(nameof(items), "Keys cannot be null.");
 
             var hash = k.CalculateKnuthHash();
             if (!dict.ContainsKey(hash))
@@ -244,10 +244,10 @@ public sealed class CharSpanLookupReadOnlyDictionary<TValue> : IReadOnlyDictiona
 
             var kdv = dict[hash];
             var kdvLast = kdv;
-            while (kdv != null)
+            while (kdv is not null)
             {
                 if (kdv.Key == k)
-                    throw new ArgumentException("Given key is already present in the dictionary.", nameof(items));
+                    ThrowHelper.DuplicateKey();
 
                 kdvLast = kdv;
                 kdv = kdv.Next;
@@ -294,7 +294,7 @@ public sealed class CharSpanLookupReadOnlyDictionary<TValue> : IReadOnlyDictiona
         public bool MoveNext()
         {
             var kdv = this.CurrentValue;
-            if (kdv == null)
+            if (kdv is null)
             {
                 if (!this.InternalEnumerator.MoveNext())
                     return false;

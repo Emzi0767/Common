@@ -1,4 +1,4 @@
-﻿// This file is part of Emzi0767.Common project.
+// This file is part of Emzi0767.Common project.
 //
 // Copyright © 2020-2025 Emzi0767
 //
@@ -79,19 +79,22 @@ public sealed class CharSpanLookupDictionary<TValue> :
     {
         get
         {
-            if (key == null)
-                throw new ArgumentNullException(nameof(key));
+            if (key is null)
+            {
+                ThrowHelper.ArgumentNull(nameof(key));
+                return default;
+            }
 
             if (!this.TryRetrieveInternal(key.AsSpan(), out var value))
-                throw new KeyNotFoundException($"The given key '{key}' was not present in the dictionary.");
+                ThrowHelper.KeyNotFound();
 
             return value;
         }
 
         set
         {
-            if (key == null)
-                throw new ArgumentNullException(nameof(key));
+            if (key is null)
+                ThrowHelper.ArgumentNull(nameof(key));
 
             this.TryInsertInternal(key, value, true);
         }
@@ -107,23 +110,12 @@ public sealed class CharSpanLookupDictionary<TValue> :
         get
         {
             if (!this.TryRetrieveInternal(key, out var value))
-                throw new KeyNotFoundException($"The given key was not present in the dictionary.");
+                ThrowHelper.KeyNotFound();
 
             return value;
         }
 
-#if NETCOREAPP
         set => this.TryInsertInternal(new string(key), value, true);
-#else
-        set
-        {
-            unsafe
-            {
-                fixed (char* chars = &key.GetPinnableReference())
-                    this.TryInsertInternal(new string(chars, 0, key.Length), value, true);
-            }
-        }
-#endif
     }
 
     object IDictionary.this[object key]
@@ -131,10 +123,13 @@ public sealed class CharSpanLookupDictionary<TValue> :
         get
         {
             if (key is not string tkey)
-                throw new ArgumentException("Key needs to be an instance of a string.");
+            {
+                ThrowHelper.Argument(nameof(key), "Key needs to be an instance of a string.");
+                return null;
+            }
 
             if (!this.TryRetrieveInternal(tkey.AsSpan(), out var value))
-                throw new KeyNotFoundException($"The given key '{tkey}' was not present in the dictionary.");
+                ThrowHelper.KeyNotFound();
 
             return value;
         }
@@ -142,13 +137,16 @@ public sealed class CharSpanLookupDictionary<TValue> :
         set
         {
             if (key is not string tkey)
-                throw new ArgumentException("Key needs to be an instance of a string.");
+            {
+                ThrowHelper.Argument(nameof(key), "Key needs to be an instance of a string.");
+                return;
+            }
 
             if (value is not TValue tvalue)
             {
                 tvalue = default;
-                if (tvalue != null)
-                    throw new ArgumentException($"Value needs to be an instance of {typeof(TValue)}.");
+                if (tvalue is not null)
+                    ThrowHelper.Argument(nameof(value), $"Value needs to be an instance of {typeof(TValue)}.");
             }
 
             this.TryInsertInternal(tkey, tvalue, true);
@@ -215,7 +213,7 @@ public sealed class CharSpanLookupDictionary<TValue> :
     public void Add(string key, TValue value)
     {
         if (!this.TryInsertInternal(key, value, false))
-            throw new ArgumentException("Given key is already present in the dictionary.", nameof(key));
+            ThrowHelper.DuplicateKey();
     }
 
     /// <summary>
@@ -224,21 +222,10 @@ public sealed class CharSpanLookupDictionary<TValue> :
     /// <param name="key">Key to insert.</param>
     /// <param name="value">Value corresponding to this key.</param>
     public void Add(ReadOnlySpan<char> key, TValue value)
-#if NETCOREAPP
     {
         if (!this.TryInsertInternal(new string(key), value, false))
-            throw new ArgumentException("Given key is already present in the dictionary.", nameof(key));
+            ThrowHelper.DuplicateKey();
     }
-#else
-    {
-        unsafe
-        {
-            fixed (char* chars = &key.GetPinnableReference())
-                if (!this.TryInsertInternal(new string(chars, 0, key.Length), value, false))
-                    throw new ArgumentException("Given key is already present in the dictionary.", nameof(key));
-        }
-    }
-#endif
 
     /// <summary>
     /// Attempts to insert a specific key and corresponding value into this dictionary.
@@ -256,17 +243,7 @@ public sealed class CharSpanLookupDictionary<TValue> :
     /// <param name="value">Value corresponding to this key.</param>
     /// <returns>Whether the operation was successful.</returns>
     public bool TryAdd(ReadOnlySpan<char> key, TValue value)
-#if NETCOREAPP
         => this.TryInsertInternal(new string(key), value, false);
-#else
-    {
-        unsafe
-        {
-            fixed (char* chars = &key.GetPinnableReference())
-                return this.TryInsertInternal(new string(chars, 0, key.Length), value, false);
-        }
-    }
-#endif
 
     /// <summary>
     /// Attempts to retrieve a value corresponding to the supplied key from this dictionary.
@@ -276,8 +253,8 @@ public sealed class CharSpanLookupDictionary<TValue> :
     /// <returns>Whether the operation was successful.</returns>
     public bool TryGetValue(string key, out TValue value)
     {
-        if (key == null)
-            throw new ArgumentNullException(nameof(key));
+        if (key is null)
+            ThrowHelper.ArgumentNull(nameof(key));
 
         return this.TryRetrieveInternal(key.AsSpan(), out value);
     }
@@ -299,8 +276,8 @@ public sealed class CharSpanLookupDictionary<TValue> :
     /// <returns>Whether the operation was successful.</returns>
     public bool TryRemove(string key, out TValue value)
     {
-        if (key == null)
-            throw new ArgumentNullException(nameof(key));
+        if (key is null)
+            ThrowHelper.ArgumentNull(nameof(key));
 
         return this.TryRemoveInternal(key.AsSpan(), out value);
     }
@@ -352,13 +329,16 @@ public sealed class CharSpanLookupDictionary<TValue> :
     void IDictionary.Add(object key, object value)
     {
         if (key is not string tkey)
-            throw new ArgumentException("Key needs to be an instance of a string.");
+        {
+            ThrowHelper.Argument(nameof(key), "Key needs to be an instance of a string.");
+            return;
+        }
 
         if (value is not TValue tvalue)
         {
             tvalue = default;
-            if (tvalue != null)
-                throw new ArgumentException($"Value needs to be an instance of {typeof(TValue)}.");
+            if (tvalue is not null)
+                ThrowHelper.Argument(nameof(value), $"Value needs to be an instance of {typeof(TValue)}.");
         }
 
         this.Add(tkey, tvalue);
@@ -367,7 +347,10 @@ public sealed class CharSpanLookupDictionary<TValue> :
     void IDictionary.Remove(object key)
     {
         if (key is not string tkey)
-            throw new ArgumentException("Key needs to be an instance of a string.");
+        {
+            ThrowHelper.Argument(nameof(key), "Key needs to be an instance of a string.");
+            return;
+        }
 
         this.TryRemove(tkey, out _);
     }
@@ -375,7 +358,10 @@ public sealed class CharSpanLookupDictionary<TValue> :
     bool IDictionary.Contains(object key)
     {
         if (key is not string tkey)
-            throw new ArgumentException("Key needs to be an instance of a string.");
+        {
+            ThrowHelper.Argument(nameof(key), "Key needs to be an instance of a string.");
+            return false;
+        }
 
         return this.ContainsKey(tkey);
     }
@@ -395,13 +381,13 @@ public sealed class CharSpanLookupDictionary<TValue> :
     void ICollection<KeyValuePair<string, TValue>>.CopyTo(KeyValuePair<string, TValue>[] array, int arrayIndex)
     {
         if (array.Length - arrayIndex < this.Count)
-            throw new ArgumentException("Target array is too small.", nameof(array));
+            ThrowHelper.Argument(nameof(array), "Target array is too small.");
 
         var i = arrayIndex;
         foreach (var (k, v) in this.InternalBuckets)
         {
             var kdv = v;
-            while (kdv != null)
+            while (kdv is not null)
             {
                 array[i++] = new KeyValuePair<string, TValue>(kdv.Key, kdv.Value);
                 kdv = kdv.Next;
@@ -418,13 +404,13 @@ public sealed class CharSpanLookupDictionary<TValue> :
         }
 
         if (array is not object[])
-            throw new ArgumentException($"Array needs to be an instance of {typeof(TValue[])} or object[].");
+            ThrowHelper.Argument(nameof(array), $"Array needs to be an instance of {typeof(TValue[])} or object[].");
 
         var i = arrayIndex;
         foreach (var (k, v) in this.InternalBuckets)
         {
             var kdv = v;
-            while (kdv != null)
+            while (kdv is not null)
             {
                 array.SetValue(new KeyValuePair<string, TValue>(kdv.Key, kdv.Value), i++);
                 kdv = kdv.Next;
@@ -437,8 +423,8 @@ public sealed class CharSpanLookupDictionary<TValue> :
 
     private bool TryInsertInternal(string key, TValue value, bool replace)
     {
-        if (key == null)
-            throw new ArgumentNullException(nameof(key), "Key cannot be null.");
+        if (key is null)
+            ThrowHelper.ArgumentNull(nameof(key), "Key cannot be null.");
 
         var hash = key.CalculateKnuthHash();
         if (!this.InternalBuckets.ContainsKey(hash))
@@ -450,7 +436,7 @@ public sealed class CharSpanLookupDictionary<TValue> :
 
         var kdv = this.InternalBuckets[hash];
         var kdvLast = kdv;
-        while (kdv != null)
+        while (kdv is not null)
         {
             if (kdv.Key == key)
             {
@@ -478,13 +464,15 @@ public sealed class CharSpanLookupDictionary<TValue> :
         if (!this.InternalBuckets.TryGetValue(hash, out var kdv))
             return false;
 
-        while (kdv != null)
+        while (kdv is not null)
         {
             if (key.SequenceEqual(kdv.Key.AsSpan()))
             {
                 value = kdv.Value;
                 return true;
             }
+
+            kdv = kdv.Next;
         }
 
         return false;
@@ -498,7 +486,7 @@ public sealed class CharSpanLookupDictionary<TValue> :
         if (!this.InternalBuckets.TryGetValue(hash, out var kdv))
             return false;
 
-        if (kdv.Next == null && key.SequenceEqual(kdv.Key.AsSpan()))
+        if (kdv.Next is null && key.SequenceEqual(kdv.Key.AsSpan()))
         {
             // Only bucket under this hash and key matches, pop the entire bucket
 
@@ -507,7 +495,7 @@ public sealed class CharSpanLookupDictionary<TValue> :
             this.Count--;
             return true;
         }
-        else if (kdv.Next == null)
+        else if (kdv.Next is null)
         {
             // Only bucket under this hash and key does not match, cannot remove
 
@@ -525,7 +513,7 @@ public sealed class CharSpanLookupDictionary<TValue> :
 
         var kdvLast = kdv;
         kdv = kdv.Next;
-        while (kdv != null)
+        while (kdv is not null)
         {
             if (key.SequenceEqual(kdv.Key.AsSpan()))
             {
@@ -550,7 +538,7 @@ public sealed class CharSpanLookupDictionary<TValue> :
         if (!this.InternalBuckets.TryGetValue(hash, out var kdv))
             return false;
 
-        while (kdv != null)
+        while (kdv is not null)
         {
             if (key.SequenceEqual(kdv.Key.AsSpan()))
                 return true;
@@ -567,7 +555,7 @@ public sealed class CharSpanLookupDictionary<TValue> :
         foreach (var value in this.InternalBuckets.Values)
         {
             var kdv = value;
-            while (kdv != null)
+            while (kdv is not null)
             {
                 builder.Add(kdv.Key);
                 kdv = kdv.Next;
@@ -583,7 +571,7 @@ public sealed class CharSpanLookupDictionary<TValue> :
         foreach (var value in this.InternalBuckets.Values)
         {
             var kdv = value;
-            while (kdv != null)
+            while (kdv is not null)
             {
                 builder.Add(kdv.Value);
                 kdv = kdv.Next;
@@ -617,7 +605,7 @@ public sealed class CharSpanLookupDictionary<TValue> :
         object IEnumerator.Current => this.Current;
         object IDictionaryEnumerator.Key => this.Current.Key;
         object IDictionaryEnumerator.Value => this.Current.Value;
-        DictionaryEntry IDictionaryEnumerator.Entry => new DictionaryEntry(this.Current.Key, this.Current.Value);
+        DictionaryEntry IDictionaryEnumerator.Entry => new(this.Current.Key, this.Current.Value);
 
         private CharSpanLookupDictionary<TValue> InternalDictionary { get; }
         private IEnumerator<KeyValuePair<ulong, KeyedValue>> InternalEnumerator { get; }
@@ -632,7 +620,7 @@ public sealed class CharSpanLookupDictionary<TValue> :
         public bool MoveNext()
         {
             var kdv = this.CurrentValue;
-            if (kdv == null)
+            if (kdv is null)
             {
                 if (!this.InternalEnumerator.MoveNext())
                     return false;
@@ -657,8 +645,6 @@ public sealed class CharSpanLookupDictionary<TValue> :
         }
 
         public void Dispose()
-        {
-            this.Reset();
-        }
+            => this.Reset();
     }
 }

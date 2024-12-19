@@ -19,6 +19,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
+using Emzi0767.Types;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Emzi0767.Common.Tests;
@@ -52,7 +53,7 @@ public sealed class SpanLookupDictTests
             Assert.IsFalse(dict.TryGetValue(k, out _));
 
         foreach (var (k, v) in this.TestValues)
-            Assert.ThrowsException<ArgumentException>(() => dict.Add(k, v));
+            Assert.ThrowsException<DuplicateKeyException>(() => dict.Add(k, v));
         Assert.AreEqual(this.TestValues.Count(), dict.Count);
 
         foreach (var (k, v) in this.TestValues)
@@ -90,7 +91,7 @@ public sealed class SpanLookupDictTests
             Assert.IsFalse(dict.TryGetValue(k.AsSpan(), out _));
 
         foreach (var (k, v) in this.TestValues)
-            Assert.ThrowsException<ArgumentException>(() => dict.Add(k.AsSpan(), v));
+            Assert.ThrowsException<DuplicateKeyException>(() => dict.Add(k.AsSpan(), v));
         Assert.AreEqual(this.TestValues.Count(), dict.Count);
 
         foreach (var (k, v) in this.TestValues)
