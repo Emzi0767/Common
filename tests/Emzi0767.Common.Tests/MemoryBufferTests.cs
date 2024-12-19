@@ -19,7 +19,6 @@ using System;
 using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
-using System.Linq;
 using System.Runtime.InteropServices;
 using Emzi0767.Types;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -471,8 +470,8 @@ public sealed class MemoryBufferTests
 
         var typedReadout = buff.Span;
         var rawReadout = buff.ByteSpan;
-        Assert.AreEqual(typedReadout.Length, buff.Count);
-        Assert.AreEqual(rawReadout.Length, buff.Length);
+        Assert.AreEqual((ulong)typedReadout.Length, buff.Count);
+        Assert.AreEqual((ulong)rawReadout.Length, buff.Length);
     }
 
     [DebuggerDisplay("{DebuggerDisplay,nq}")]
