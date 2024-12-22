@@ -74,7 +74,7 @@ public sealed class MemoryBuffer<T> : IMemoryBuffer<T>
 
         this._segments = new List<MemoryOwnerInfo>(initialSegmentCount + 1);
         for (var i = 0; i < initialSegmentCount; i++)
-            this._segments.Add(new(this._pool.Rent(this._segmentSize)));
+            this._segments.Add(new(this._pool.Rent(this._segmentSize), this._itemSize));
 
         this.Length = 0;
 
@@ -473,7 +473,7 @@ public sealed class MemoryBuffer<T> : IMemoryBuffer<T>
     {
         var length = sizeHint * this._itemSize;
         if (this._segNo >= this._segments.Count)
-            this._segments.Add(new(this._pool.Rent(length)));
+            this._segments.Add(new(this._pool.Rent(length), this._itemSize));
 
         var seg = this._segments[this._segNo];
         if (length + this._lastSegmentLength <= seg.Length)
@@ -483,7 +483,7 @@ public sealed class MemoryBuffer<T> : IMemoryBuffer<T>
         this._segNo++;
         this._lastSegmentLength = 0;
         var owner = this._pool.Rent(length);
-        this._segments.Add(new(owner));
+        this._segments.Add(new(owner, this._itemSize));
 
         return MemoryMarshal.Cast<byte, T>(owner.Memory.Span);
     }
@@ -510,13 +510,15 @@ public sealed class MemoryBuffer<T> : IMemoryBuffer<T>
                 : segCap;
 
         for (var i = 0; i < segCount; i++)
-            this._segments.Add(new(this._pool.Rent(this._segmentSize)));
+            this._segments.Add(new(this._pool.Rent(this._segmentSize), this._itemSize));
     }
 
     private sealed class MemoryOwnerInfo : IDisposable
     {
         public Memory<byte> Memory
             => this._owner.Memory.Slice(this.Offset, this.Length);
+
+        private readonly int _alignment;
 
         public int Offset
         {
@@ -545,11 +547,14 @@ public sealed class MemoryBuffer<T> : IMemoryBuffer<T>
         private readonly IMemoryOwner<byte> _owner;
         private int _offset, _length;
 
-        public MemoryOwnerInfo(IMemoryOwner<byte> owner)
+        public MemoryOwnerInfo(IMemoryOwner<byte> owner, int alignment)
         {
             this._owner = owner;
             this.Offset = 0;
             this.Length = owner.Memory.Length;
+            this._alignment = alignment;
+
+            this.Length -= this.Length % this._alignment;
         }
 
         public void Dispose()
