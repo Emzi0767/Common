@@ -416,6 +416,16 @@ public sealed class MemoryBuffer<T> : IMemoryBuffer<T>
     }
 
     /// <inheritdoc />
+    public async ValueTask CopyToAsync(Stream destination, CancellationToken cancellationToken = default)
+    {
+        if (this._isDisposed)
+            ThrowHelper.BufferDisposed();
+
+        foreach (var seg in this._segments)
+            await destination.WriteAsync(seg.Memory, cancellationToken).ConfigureAwait(false);
+    }
+
+    /// <inheritdoc />
     public void Clear()
     {
         if (this._isDisposed)

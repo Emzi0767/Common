@@ -234,11 +234,13 @@ public sealed class ContinuousMemoryBuffer<T> : IMemoryBuffer<T>
             ThrowHelper.BufferDisposed();
 
         source *= (ulong)this._itemSize;
-        if (source > this.Count)
+        count *= (ulong)this._itemSize;
+        if (source > this.Count || source + count > this.Count)
             ThrowHelper.ArgumentOutOfRange(nameof(source), "Cannot copy data from beyond the buffer.");
 
         var start = (int)source;
-        var sbuff = this._buff[start..this._pos].Span;
+        var len = (int)count;
+        var sbuff = this._buff.Slice(start, len).Span;
         stream.Write(sbuff);
 
         return (ulong)(sbuff.Length / this._itemSize);
@@ -255,11 +257,13 @@ public sealed class ContinuousMemoryBuffer<T> : IMemoryBuffer<T>
             ThrowHelper.BufferDisposed();
 
         source *= (ulong)this._itemSize;
-        if (source > this.Count)
+        count *= (ulong)this._itemSize;
+        if (source > this.Count || source + count > this.Count)
             ThrowHelper.ArgumentOutOfRange(nameof(source), "Cannot copy data from beyond the buffer.");
 
         var start = (int)source;
-        var sbuff = this._buff[start..this._pos];
+        var len = (int)count;
+        var sbuff = this._buff.Slice(start, len);
         await stream.WriteAsync(sbuff, cancellationToken).ConfigureAwait(false);
 
         return (ulong)(sbuff.Length / this._itemSize);
@@ -281,6 +285,15 @@ public sealed class ContinuousMemoryBuffer<T> : IMemoryBuffer<T>
             ThrowHelper.BufferDisposed();
 
         destination.Write(this._buff[..this._pos].Span);
+    }
+
+    /// <inheritdoc />
+    public async ValueTask CopyToAsync(Stream destination, CancellationToken cancellationToken = default)
+    {
+        if (this._isDisposed)
+            ThrowHelper.BufferDisposed();
+
+        await destination.WriteAsync(this._buff[..this._pos], cancellationToken).ConfigureAwait(false);
     }
 
     /// <inheritdoc />

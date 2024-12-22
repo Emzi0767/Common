@@ -19,9 +19,9 @@ using System;
 using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
-using System.Runtime.CompilerServices;
+using System.Linq;
 using System.Runtime.InteropServices;
-using System.Text;
+using System.Threading.Tasks;
 using Emzi0767.Types;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -203,6 +203,35 @@ public sealed class MemoryBufferTests
     [DataRow(128 * 1024, 16 * 1024, _bufferContinuous)]
     [DataRow(128 * 1024, 64 * 1024, _bufferContinuous)]
     [DataRow(128 * 1024, 128 * 1024, _bufferContinuous)]
+    public async Task TestStreamCopyAsync(int size, int segment, int type)
+    {
+        var data = new byte[size];
+        this.RNG.GetBytes(data);
+
+        using var buff = CreateMemoryBuffer<byte>(type, segment);
+        buff.Write(data);
+
+        Assert.IsTrue(buff.Capacity >= (ulong)size);
+        Assert.AreEqual((ulong)size, buff.Length);
+
+        using var ms = new MemoryStream();
+        await buff.CopyToAsync(ms);
+        Assert.AreEqual((long)buff.Length, ms.Length);
+
+        var readout = ms.ToArray();
+        Assert.AreEqual(size, readout.Length);
+        Assert.IsTrue(readout.SequenceEqual(data));
+    }
+
+    [DataTestMethod]
+    [DataRow(128 * 1024, 8 * 1024, _bufferStandard)]
+    [DataRow(128 * 1024, 16 * 1024, _bufferStandard)]
+    [DataRow(128 * 1024, 64 * 1024, _bufferStandard)]
+    [DataRow(128 * 1024, 128 * 1024, _bufferStandard)]
+    [DataRow(128 * 1024, 8 * 1024, _bufferContinuous)]
+    [DataRow(128 * 1024, 16 * 1024, _bufferContinuous)]
+    [DataRow(128 * 1024, 64 * 1024, _bufferContinuous)]
+    [DataRow(128 * 1024, 128 * 1024, _bufferContinuous)]
     public void TestStreamWrite(int size, int segment, int type)
     {
         var data = new byte[size];
@@ -222,6 +251,34 @@ public sealed class MemoryBufferTests
         var readouts = readout.AsSpan();
         Assert.AreEqual(size, readout.Length);
         Assert.IsTrue(readouts.SequenceEqual(datas));
+    }
+
+    [DataTestMethod]
+    [DataRow(128 * 1024, 8 * 1024, _bufferStandard)]
+    [DataRow(128 * 1024, 16 * 1024, _bufferStandard)]
+    [DataRow(128 * 1024, 64 * 1024, _bufferStandard)]
+    [DataRow(128 * 1024, 128 * 1024, _bufferStandard)]
+    [DataRow(128 * 1024, 8 * 1024, _bufferContinuous)]
+    [DataRow(128 * 1024, 16 * 1024, _bufferContinuous)]
+    [DataRow(128 * 1024, 64 * 1024, _bufferContinuous)]
+    [DataRow(128 * 1024, 128 * 1024, _bufferContinuous)]
+    public async Task TestStreamWriteAsync(int size, int segment, int type)
+    {
+        var data = new byte[size];
+        this.RNG.GetBytes(data);
+
+        using var ms = new MemoryStream();
+        ms.Write(data, 0, data.Length);
+        ms.Position = 0;
+
+        using var buff = CreateMemoryBuffer<byte>(type, segment);
+        await buff.WriteAsync(ms);
+
+        Assert.AreEqual((long)buff.Length, ms.Length);
+
+        var readout = buff.ToArray();
+        Assert.AreEqual(size, readout.Length);
+        Assert.IsTrue(readout.SequenceEqual(data));
     }
 
     [DataTestMethod]
@@ -256,6 +313,162 @@ public sealed class MemoryBufferTests
         var readouts = readout.AsSpan();
         Assert.AreEqual(size, readout.Length);
         Assert.IsTrue(readouts.SequenceEqual(datas));
+    }
+
+    [DataTestMethod]
+    [DataRow(128 * 1024, 8 * 1024, _bufferStandard)]
+    [DataRow(128 * 1024, 16 * 1024, _bufferStandard)]
+    [DataRow(128 * 1024, 64 * 1024, _bufferStandard)]
+    [DataRow(128 * 1024, 128 * 1024, _bufferStandard)]
+    [DataRow(128 * 1024, 8 * 1024, _bufferContinuous)]
+    [DataRow(128 * 1024, 16 * 1024, _bufferContinuous)]
+    [DataRow(128 * 1024, 64 * 1024, _bufferContinuous)]
+    [DataRow(128 * 1024, 128 * 1024, _bufferContinuous)]
+    public async Task TestUnseekableStreamWriteAsync(int size, int segment, int type)
+    {
+        var data = new byte[size];
+        this.RNG.GetBytes(data);
+
+        using var ms = new MemoryStream();
+        using (var gzc = new GZipStream(ms, CompressionLevel.Optimal, true))
+        {
+            gzc.Write(data, 0, data.Length);
+            gzc.Flush();
+        }
+
+        ms.Position = 0;
+
+        using var gzd = new GZipStream(ms, CompressionMode.Decompress, true);
+        using var buff = CreateMemoryBuffer<byte>(type, segment);
+        await buff.WriteAsync(gzd);
+
+        var readout = buff.ToArray();
+        Assert.AreEqual(size, readout.Length);
+        Assert.IsTrue(readout.SequenceEqual(data));
+    }
+
+    [DataTestMethod]
+    [DataRow(128 * 1024, 8 * 1024, _bufferStandard)]
+    [DataRow(128 * 1024, 16 * 1024, _bufferStandard)]
+    [DataRow(128 * 1024, 64 * 1024, _bufferStandard)]
+    [DataRow(128 * 1024, 128 * 1024, _bufferStandard)]
+    [DataRow(128 * 1024, 8 * 1024, _bufferContinuous)]
+    [DataRow(128 * 1024, 16 * 1024, _bufferContinuous)]
+    [DataRow(128 * 1024, 64 * 1024, _bufferContinuous)]
+    [DataRow(128 * 1024, 128 * 1024, _bufferContinuous)]
+    public void TestStreamRead(int size, int segment, int type)
+    {
+        var data = new byte[size];
+        var datas = data.AsSpan();
+        this.RNG.GetBytes(datas);
+
+        using var buff = CreateMemoryBuffer<byte>(type, segment);
+        buff.Write(datas);
+
+        Assert.IsTrue(buff.Capacity >= (ulong)size);
+        Assert.AreEqual((ulong)size, buff.Length);
+
+        using var ms = new MemoryStream();
+        buff.Read(ms, 0);
+        Assert.AreEqual((long)buff.Length, ms.Length);
+
+        var readout = ms.ToArray();
+        var readouts = readout.AsSpan();
+        Assert.AreEqual(size, readout.Length);
+        Assert.IsTrue(readouts.SequenceEqual(datas));
+    }
+
+    [DataTestMethod]
+    [DataRow(128 * 1024, 8 * 1024, _bufferStandard)]
+    [DataRow(128 * 1024, 16 * 1024, _bufferStandard)]
+    [DataRow(128 * 1024, 64 * 1024, _bufferStandard)]
+    [DataRow(128 * 1024, 128 * 1024, _bufferStandard)]
+    [DataRow(128 * 1024, 8 * 1024, _bufferContinuous)]
+    [DataRow(128 * 1024, 16 * 1024, _bufferContinuous)]
+    [DataRow(128 * 1024, 64 * 1024, _bufferContinuous)]
+    [DataRow(128 * 1024, 128 * 1024, _bufferContinuous)]
+    public async Task TestStreamReadAsync(int size, int segment, int type)
+    {
+        var data = new byte[size];
+        this.RNG.GetBytes(data);
+
+        using var buff = CreateMemoryBuffer<byte>(type, segment);
+        buff.Write(data);
+
+        Assert.IsTrue(buff.Capacity >= (ulong)size);
+        Assert.AreEqual((ulong)size, buff.Length);
+
+        using var ms = new MemoryStream();
+        await buff.ReadAsync(ms, 0);
+        Assert.AreEqual((long)buff.Length, ms.Length);
+
+        var readout = ms.ToArray();
+        Assert.AreEqual(size, readout.Length);
+        Assert.IsTrue(readout.SequenceEqual(data));
+    }
+
+    [DataTestMethod]
+    [DataRow(128 * 1024, 8 * 1024, 0 * 1024, 128 * 1024, _bufferStandard)]
+    [DataRow(128 * 1024, 8 * 1024, 4 * 1024, 120 * 1024, _bufferStandard)]
+    [DataRow(128 * 1024, 8 * 1024, 8 * 1024, 112 * 1024, _bufferStandard)]
+    [DataRow(128 * 1024, 8 * 1024, 12 * 1024, 104 * 1024, _bufferStandard)]
+    [DataRow(128 * 1024, 8 * 1024, 16 * 1024, 96 * 1024, _bufferStandard)]
+    [DataRow(128 * 1024, 8 * 1024, 0 * 1024, 128 * 1024, _bufferContinuous)]
+    [DataRow(128 * 1024, 8 * 1024, 4 * 1024, 120 * 1024, _bufferContinuous)]
+    [DataRow(128 * 1024, 8 * 1024, 8 * 1024, 112 * 1024, _bufferContinuous)]
+    [DataRow(128 * 1024, 8 * 1024, 12 * 1024, 104 * 1024, _bufferContinuous)]
+    [DataRow(128 * 1024, 8 * 1024, 16 * 1024, 96 * 1024, _bufferContinuous)]
+    public void TestPartialStreamRead(int size, int segment, int offset, int count, int type)
+    {
+        var data = new byte[size];
+        var datas = data.AsSpan();
+        this.RNG.GetBytes(datas);
+
+        using var buff = CreateMemoryBuffer<byte>(type, segment);
+        buff.Write(datas);
+
+        Assert.IsTrue(buff.Capacity >= (ulong)size);
+        Assert.AreEqual((ulong)size, buff.Length);
+
+        using var ms = new MemoryStream();
+        buff.Read(ms, (ulong)offset, (ulong)count);
+        Assert.AreEqual(count, ms.Length);
+
+        var readout = ms.ToArray();
+        var readouts = readout.AsSpan();
+        Assert.AreEqual(count, readouts.Length);
+        Assert.IsTrue(readouts.SequenceEqual(datas.Slice(offset, count)));
+    }
+
+    [DataTestMethod]
+    [DataRow(128 * 1024, 8 * 1024, 0 * 1024, 128 * 1024, _bufferStandard)]
+    [DataRow(128 * 1024, 8 * 1024, 4 * 1024, 120 * 1024, _bufferStandard)]
+    [DataRow(128 * 1024, 8 * 1024, 8 * 1024, 112 * 1024, _bufferStandard)]
+    [DataRow(128 * 1024, 8 * 1024, 12 * 1024, 104 * 1024, _bufferStandard)]
+    [DataRow(128 * 1024, 8 * 1024, 16 * 1024, 96 * 1024, _bufferStandard)]
+    [DataRow(128 * 1024, 8 * 1024, 0 * 1024, 128 * 1024, _bufferContinuous)]
+    [DataRow(128 * 1024, 8 * 1024, 4 * 1024, 120 * 1024, _bufferContinuous)]
+    [DataRow(128 * 1024, 8 * 1024, 8 * 1024, 112 * 1024, _bufferContinuous)]
+    [DataRow(128 * 1024, 8 * 1024, 12 * 1024, 104 * 1024, _bufferContinuous)]
+    [DataRow(128 * 1024, 8 * 1024, 16 * 1024, 96 * 1024, _bufferContinuous)]
+    public async Task TestPartialStreamReadAsync(int size, int segment, int offset, int count, int type)
+    {
+        var data = new byte[size];
+        this.RNG.GetBytes(data);
+
+        using var buff = CreateMemoryBuffer<byte>(type, segment);
+        buff.Write(data);
+
+        Assert.IsTrue(buff.Capacity >= (ulong)size);
+        Assert.AreEqual((ulong)size, buff.Length);
+
+        using var ms = new MemoryStream();
+        await buff.ReadAsync(ms, (ulong)offset, (ulong)count);
+        Assert.AreEqual(count, ms.Length);
+
+        var readout = ms.ToArray();
+        Assert.AreEqual(count, readout.Length);
+        Assert.IsTrue(readout.SequenceEqual(new ArraySegment<byte>(data, offset, count)));
     }
 
     [DataTestMethod]

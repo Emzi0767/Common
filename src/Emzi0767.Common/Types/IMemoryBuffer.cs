@@ -165,6 +165,14 @@ public interface IMemoryBuffer<T> : IBufferWriter<T>, IDisposable
     void CopyTo(Stream destination);
 
     /// <summary>
+    /// Asynchronously copies all the data from this buffer to a stream.
+    /// </summary>
+    /// <param name="destination">Stream to copy this buffer's data to.</param>
+    /// <param name="cancellationToken">A token to cancel the operation.</param>
+    /// <returns>A task representing the operation.</returns>
+    ValueTask CopyToAsync(Stream destination, CancellationToken cancellationToken = default);
+
+    /// <summary>
     /// Resets the buffer's pointer to the beginning, allowing for reuse.
     /// </summary>
     void Clear();
