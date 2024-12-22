@@ -424,6 +424,8 @@ public sealed class MemoryBuffer<T> : IMemoryBuffer<T>
         this._segNo = 0;
         this._lastSegmentLength = 0;
         this.Length = 0;
+        foreach (var seg in this._segments)
+            seg.ResetLength();
     }
 
     /// <summary>
@@ -555,6 +557,12 @@ public sealed class MemoryBuffer<T> : IMemoryBuffer<T>
             this._alignment = alignment;
 
             this.Length -= this.Length % this._alignment;
+        }
+
+        public void ResetLength()
+        {
+            var originalLength = this._owner.Memory.Length;
+            this.Length = originalLength - (originalLength % this._alignment);
         }
 
         public void Dispose()
