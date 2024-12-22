@@ -18,6 +18,8 @@
 using System;
 using System.Buffers;
 using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace Emzi0767.Types;
 
@@ -70,6 +72,14 @@ public interface IMemoryBuffer<T> : IBufferWriter<T>, IDisposable
     void Write(Stream stream);
 
     /// <summary>
+    /// Asynchronously appends data from a supplied stream to this buffer, growing it if necessary.
+    /// </summary>
+    /// <param name="stream">Stream to copy data from.</param>
+    /// <param name="cancellationToken">A token to cancel the operation.</param>
+    /// <returns>A task representing the operation.</returns>
+    ValueTask WriteAsync(Stream stream, CancellationToken cancellationToken = default);
+
+    /// <summary>
     /// Reads data from this buffer to the specified destination buffer. This method will write either as many
     /// bytes as there are in the destination buffer, or however many bytes are available in this buffer,
     /// whichever is less.
@@ -98,11 +108,49 @@ public interface IMemoryBuffer<T> : IBufferWriter<T>, IDisposable
     /// bytes as specified in the target slice, or however many bytes are available in this buffer, whichever is
     /// less.
     /// </summary>
-    /// <param name="data"></param>
-    /// <param name="source"></param>
+    /// <param name="data">Array segment to read the data from this buffer into.</param>
+    /// <param name="source">Starting position in this buffer to read from.</param>
     /// <param name="itemsWritten">Number of items written to the destination buffer.</param>
     /// <returns>Whether more data is available in this buffer.</returns>
     bool Read(ArraySegment<T> data, ulong source, out int itemsWritten);
+
+    /// <summary>
+    /// Reads data from this buffer to specified stream. This method will write all bytes in the target slice.
+    /// </summary>
+    /// <param name="stream">Stream to write the data from the buffer slice to.</param>
+    /// <param name="source">Starting position in this buffer to read from.</param>
+    /// <returns>Number of bytes written into the stream.</returns>
+    ulong Read(Stream stream, ulong source);
+
+    /// <summary>
+    /// Reads data from this buffer to specified stream. This method will write all bytes in the target slice.
+    /// </summary>
+    /// <param name="stream">Stream to write the data from the buffer slice to.</param>
+    /// <param name="source">Starting position in this buffer to read from.</param>
+    /// <param name="count">Number of items in this buffer to write to the stream. Must not exceed buffer's size.</param>
+    /// <returns>Number of bytes written into the stream.</returns>
+    ulong Read(Stream stream, ulong source, ulong count);
+
+    /// <summary>
+    /// Asynchronously reads data from this buffer to specified stream. This method will write all bytes in the target
+    /// slice.
+    /// </summary>
+    /// <param name="stream">Stream to write the data from the buffer slice to.</param>
+    /// <param name="source">Starting position in this buffer to read from.</param>
+    /// <param name="cancellationToken">A token to cancel the operation.</param>
+    /// <returns>Number of bytes written into the stream.</returns>
+    ValueTask<ulong> ReadAsync(Stream stream, ulong source, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Asynchronously reads data from this buffer to specified stream. This method will write all bytes in the target
+    /// slice.
+    /// </summary>
+    /// <param name="stream">Stream to write the data from the buffer slice to.</param>
+    /// <param name="source">Starting position in this buffer to read from.</param>
+    /// <param name="count">Number of items in this buffer to write to the stream. Must not exceed buffer's size.</param>
+    /// <param name="cancellationToken">A token to cancel the operation.</param>
+    /// <returns>Number of bytes written into the stream.</returns>
+    ValueTask<ulong> ReadAsync(Stream stream, ulong source, ulong count, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Converts this buffer into a single continuous byte array.

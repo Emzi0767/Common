@@ -20,6 +20,8 @@ using System.Buffers;
 using System.IO;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace Emzi0767.Types;
 
@@ -48,6 +50,11 @@ public sealed class ContinuousMemoryBuffer<T> : IMemoryBuffer<T>
     /// Gets a byte view of the underlying buffer, bounded by total number of bytes written so far.
     /// </summary>
     public ReadOnlySpan<byte> ByteSpan => this._buff.Span[..(int)this.Length];
+
+    /// <summary>
+    /// Gets a byte view of the underlying buffer, bounded by total number of bytes written so far.
+    /// </summary>
+    public ReadOnlyMemory<byte> ByteMemory => this._buff[..(int)this.Length];
 
     private readonly MemoryPool<byte> _pool;
     private IMemoryOwner<byte> _buffOwner;
@@ -110,22 +117,76 @@ public sealed class ContinuousMemoryBuffer<T> : IMemoryBuffer<T>
 
     private void WriteStreamSeekable(Stream stream)
     {
-        if (stream.Length > int.MaxValue)
+        var readLength = stream.Length - stream.Position;
+        readLength -= readLength % this._itemSize;
+
+        if (this._pos + readLength > int.MaxValue)
             ThrowHelper.Argument(nameof(stream), "Stream is too long.");
 
-        this.EnsureSize(this._pos + (int)stream.Length);
-        stream.Read(this._buff[this._pos..].Span);
+        this.EnsureSize(this._pos + (int)readLength);
+        while (readLength > 0)
+        {
+            var br = stream.Read(this._buff.Slice(this._pos, (int)readLength).Span);
 
-        this._pos += (int)stream.Length;
+            this._pos += br;
+            readLength -= br;
+        }
     }
 
     private void WriteStreamUnseekable(Stream stream)
     {
+        var readLength = 4096;
+        readLength -= readLength % this._itemSize;
+
         var br = 0;
         do
         {
-            this.EnsureSize(this._pos + 4096);
-            br = stream.Read(this._buff[this._pos..].Span);
+            this.EnsureSize(this._pos + readLength);
+            br = stream.Read(this._buff.Slice(this._pos, readLength).Span);
+            this._pos += br;
+        }
+        while (br != 0);
+    }
+
+    /// <inheritdoc />
+    public ValueTask WriteAsync(Stream stream, CancellationToken cancellationToken = default)
+    {
+        if (this._isDisposed)
+            ThrowHelper.BufferDisposed();
+
+        return stream.CanSeek
+            ? this.WriteStreamSeekableAsync(stream, cancellationToken)
+            : this.WriteStreamUnseekableAsync(stream, cancellationToken);
+    }
+
+    private async ValueTask WriteStreamSeekableAsync(Stream stream, CancellationToken cancellationToken)
+    {
+        var readLength = stream.Length - stream.Position;
+        readLength -= readLength % this._itemSize;
+
+        if (this._pos + readLength > int.MaxValue)
+            ThrowHelper.Argument(nameof(stream), "Stream is too long.");
+
+        this.EnsureSize(this._pos + (int)readLength);
+        while (readLength > 0)
+        {
+            var br = await stream.ReadAsync(this._buff.Slice(this._pos, (int)readLength), cancellationToken).ConfigureAwait(false);
+
+            this._pos += br;
+            readLength -= br;
+        }
+    }
+
+    private async ValueTask WriteStreamUnseekableAsync(Stream stream, CancellationToken cancellationToken)
+    {
+        var readLength = 4096;
+        readLength -= readLength % this._itemSize;
+
+        var br = 0;
+        do
+        {
+            this.EnsureSize(this._pos + readLength);
+            br = await stream.ReadAsync(this._buff.Slice(this._pos, readLength), cancellationToken).ConfigureAwait(false);
             this._pos += br;
         }
         while (br != 0);
@@ -143,7 +204,7 @@ public sealed class ContinuousMemoryBuffer<T> : IMemoryBuffer<T>
             ThrowHelper.ArgumentOutOfRange(nameof(source), "Cannot copy data from beyond the buffer.");
 
         var start = (int)source;
-        var sbuff = this._buff[start..this._pos ].Span;
+        var sbuff = this._buff[start..this._pos].Span;
         var dbuff = MemoryMarshal.AsBytes(destination);
         if (sbuff.Length > dbuff.Length)
             sbuff = sbuff[..dbuff.Length];
@@ -161,6 +222,48 @@ public sealed class ContinuousMemoryBuffer<T> : IMemoryBuffer<T>
     /// <inheritdoc />
     public bool Read(ArraySegment<T> data, ulong source, out int itemsWritten)
         => this.Read(data.AsSpan(), source, out itemsWritten);
+
+    /// <inheritdoc />
+    public ulong Read(Stream stream, ulong source)
+        => this.Read(stream, source, this.Count - source);
+
+    /// <inheritdoc />
+    public ulong Read(Stream stream, ulong source, ulong count)
+    {
+        if (this._isDisposed)
+            ThrowHelper.BufferDisposed();
+
+        source *= (ulong)this._itemSize;
+        if (source > this.Count)
+            ThrowHelper.ArgumentOutOfRange(nameof(source), "Cannot copy data from beyond the buffer.");
+
+        var start = (int)source;
+        var sbuff = this._buff[start..this._pos].Span;
+        stream.Write(sbuff);
+
+        return (ulong)(sbuff.Length / this._itemSize);
+    }
+
+    /// <inheritdoc />
+    public ValueTask<ulong> ReadAsync(Stream stream, ulong source, CancellationToken cancellationToken = default)
+        => this.ReadAsync(stream, source, this.Count - source, cancellationToken);
+
+    /// <inheritdoc />
+    public async ValueTask<ulong> ReadAsync(Stream stream, ulong source, ulong count, CancellationToken cancellationToken = default)
+    {
+        if (this._isDisposed)
+            ThrowHelper.BufferDisposed();
+
+        source *= (ulong)this._itemSize;
+        if (source > this.Count)
+            ThrowHelper.ArgumentOutOfRange(nameof(source), "Cannot copy data from beyond the buffer.");
+
+        var start = (int)source;
+        var sbuff = this._buff[start..this._pos];
+        await stream.WriteAsync(sbuff, cancellationToken).ConfigureAwait(false);
+
+        return (ulong)(sbuff.Length / this._itemSize);
+    }
 
     /// <inheritdoc />
     public T[] ToArray()

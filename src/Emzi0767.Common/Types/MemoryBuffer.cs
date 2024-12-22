@@ -22,6 +22,8 @@ using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace Emzi0767.Types;
 
@@ -61,7 +63,7 @@ public sealed class MemoryBuffer<T> : IMemoryBuffer<T>
     {
         this._itemSize = Unsafe.SizeOf<T>();
         if (segmentSize % this._itemSize != 0)
-            ThrowHelper.Argument(nameof(segmentSize), "Segment size must match size of individual item.");
+            ThrowHelper.Argument(nameof(segmentSize), "Segment size must be aligned to the size of an individual item.");
 
         this._pool = memPool ?? MemoryPool<byte>.Shared;
 
@@ -135,6 +137,7 @@ public sealed class MemoryBuffer<T> : IMemoryBuffer<T>
     private void WriteStreamSeekable(Stream stream)
     {
         var len = (int)(stream.Length - stream.Position);
+        len -= len % this._itemSize;
         this.Grow(len);
 
         while (this._segNo < this._segments.Count && len > 0)
@@ -145,13 +148,13 @@ public sealed class MemoryBuffer<T> : IMemoryBuffer<T>
             avs = avs > len
                 ? len
                 : avs;
-            var dmem = mem[this._lastSegmentLength..];
+            var dmem = mem.Slice(this._lastSegmentLength, avs);
 
-            stream.Read(dmem.Span);
-            len -= dmem.Span.Length;
+            var br = stream.Read(dmem.Span);
+            len -= br;
 
-            this.Length += (ulong)avs;
-            this._lastSegmentLength += avs;
+            this.Length += (ulong)br;
+            this._lastSegmentLength += br;
 
             if (this._lastSegmentLength == mem.Length)
             {
@@ -164,9 +167,65 @@ public sealed class MemoryBuffer<T> : IMemoryBuffer<T>
     private void WriteStreamUnseekable(Stream stream)
     {
         var read = 0;
-        Span<byte> buffs = stackalloc byte[this._segmentSize];
+        var optimalSize = 4096;
+        optimalSize -= optimalSize % this._itemSize;
+
+        Span<byte> buffs = stackalloc byte[optimalSize];
         while ((read = stream.Read(buffs)) != 0)
             this.Write(MemoryMarshal.Cast<byte, T>(buffs[..read]));
+    }
+
+    /// <inheritdoc />
+    public ValueTask WriteAsync(Stream stream, CancellationToken cancellationToken = default)
+    {
+        if (this._isDisposed)
+            ThrowHelper.BufferDisposed();
+
+        return stream.CanSeek
+            ? this.WriteStreamSeekableAsync(stream, cancellationToken)
+            : this.WriteStreamUnseekableAsync(stream, cancellationToken);
+    }
+
+    private async ValueTask WriteStreamSeekableAsync(Stream stream, CancellationToken cancellationToken)
+    {
+        var len = (int)(stream.Length - stream.Position);
+        len -= len % this._itemSize;
+        this.Grow(len);
+
+        while (this._segNo < this._segments.Count && len > 0)
+        {
+            var seg = this._segments[this._segNo];
+            var mem = seg.Memory;
+            var avs = mem.Length - this._lastSegmentLength;
+            avs = avs > len
+                ? len
+                : avs;
+            var dmem = mem.Slice(this._lastSegmentLength, avs);
+
+            var br = await stream.ReadAsync(dmem, cancellationToken);
+            len -= br;
+
+            this.Length += (ulong)br;
+            this._lastSegmentLength += br;
+
+            if (this._lastSegmentLength == mem.Length)
+            {
+                this._segNo++;
+                this._lastSegmentLength = 0;
+            }
+        }
+    }
+
+    private async ValueTask WriteStreamUnseekableAsync(Stream stream, CancellationToken cancellationToken)
+    {
+        var read = 0;
+        var optimalSize = 4096;
+        optimalSize -= optimalSize % this._itemSize;
+
+        using var buff = this._pool.Rent(optimalSize);
+        var buffs = buff.Memory.Slice(0, optimalSize);
+        while ((read = await stream.ReadAsync(buffs, cancellationToken)) != 0)
+            this.Write(MemoryMarshal.Cast<byte, T>(buffs[..read].Span));
     }
 
     /// <inheritdoc />
@@ -230,6 +289,110 @@ public sealed class MemoryBuffer<T> : IMemoryBuffer<T>
     /// <inheritdoc />
     public bool Read(ArraySegment<T> data, ulong source, out int itemsWritten)
         => this.Read(data.AsSpan(), source, out itemsWritten);
+
+    /// <inheritdoc />
+    public ulong Read(Stream stream, ulong source)
+        => this.Read(stream, source, this.Length - source);
+
+    /// <inheritdoc />
+    public ulong Read(Stream stream, ulong source, ulong count)
+    {
+        if (this._isDisposed)
+            ThrowHelper.BufferDisposed();
+
+        source *= (ulong)this._itemSize;
+        if (source > this.Count || source + count > this.Count)
+            ThrowHelper.ArgumentOutOfRange(nameof(source), "Cannot copy data from beyond the buffer.");
+
+        // Find where to begin
+        var i = 0;
+        for (; i < this._segments.Count; i++)
+        {
+            var seg = this._segments[i];
+            var mem = seg.Memory;
+            if ((ulong)mem.Length > source)
+                break;
+
+            source -= (ulong)mem.Length;
+        }
+
+        // Do actual copy
+        var itemsWritten = 0ul;
+        var dl = count * (ulong)this._itemSize;
+        var sri = (int)source;
+        for (; i < this._segments.Count && dl > 0; i++)
+        {
+            var seg = this._segments[i];
+            var mem = seg.Memory;
+            var src = mem.Span;
+
+            if (sri != 0)
+            {
+                src = src[sri..];
+                sri = 0;
+            }
+
+            if (itemsWritten + (ulong)src.Length > dl)
+                src = src[..(int)(dl - itemsWritten)];
+
+            stream.Write(src);
+            itemsWritten += (ulong)src.Length;
+        }
+
+        return itemsWritten / (ulong)this._itemSize;
+    }
+
+    /// <inheritdoc />
+    public ValueTask<ulong> ReadAsync(Stream stream, ulong source, CancellationToken cancellationToken = default)
+        => this.ReadAsync(stream, source, this.Count - source, cancellationToken);
+
+    /// <inheritdoc />
+    public async ValueTask<ulong> ReadAsync(Stream stream, ulong source, ulong count, CancellationToken cancellationToken = default)
+    {
+        if (this._isDisposed)
+            ThrowHelper.BufferDisposed();
+
+        source *= (ulong)this._itemSize;
+        if (source > this.Count || source + count > this.Count)
+            ThrowHelper.ArgumentOutOfRange(nameof(source), "Cannot copy data from beyond the buffer.");
+
+        // Find where to begin
+        var i = 0;
+        for (; i < this._segments.Count; i++)
+        {
+            var seg = this._segments[i];
+            var mem = seg.Memory;
+            if ((ulong)mem.Length > source)
+                break;
+
+            source -= (ulong)mem.Length;
+        }
+
+        // Do actual copy
+        var itemsWritten = 0ul;
+        var dl = count * (ulong)this._itemSize;
+        var sri = (int)source;
+        for (; i < this._segments.Count && dl > 0; i++)
+        {
+            var seg = this._segments[i];
+            var mem = seg.Memory;
+            var src = mem;
+
+            if (sri != 0)
+            {
+                src = src[sri..];
+                sri = 0;
+            }
+
+            if (itemsWritten + (ulong)src.Length > dl)
+                src = src[..(int)(dl - itemsWritten)];
+
+            await stream.WriteAsync(src, cancellationToken).ConfigureAwait(false);
+            itemsWritten += (ulong)src.Length;
+        }
+
+        return itemsWritten / (ulong)this._itemSize;
+    }
 
     /// <inheritdoc />
     public T[] ToArray()
