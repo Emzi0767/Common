@@ -72,12 +72,30 @@ public interface IMemoryBuffer<T> : IBufferWriter<T>, IDisposable
     void Write(Stream stream);
 
     /// <summary>
+    /// Appends data from a supplied stream to this buffer, growing it if necessary. This method will copy at most
+    /// <paramref name="limit"/> bytes.
+    /// </summary>
+    /// <param name="stream">Stream to copy data from.</param>
+    /// <param name="limit">Maximum number of bytes to copy.</param>
+    void Write(Stream stream, ulong limit);
+
+    /// <summary>
     /// Asynchronously appends data from a supplied stream to this buffer, growing it if necessary.
     /// </summary>
     /// <param name="stream">Stream to copy data from.</param>
     /// <param name="cancellationToken">A token to cancel the operation.</param>
     /// <returns>A task representing the operation.</returns>
     ValueTask WriteAsync(Stream stream, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Asynchronously appends data from a supplied stream to this buffer, growing it if necessary. This method will
+    /// copy at most <paramref name="limit"/> bytes.
+    /// </summary>
+    /// <param name="stream">Stream to copy data from.</param>
+    /// <param name="limit">A token to cancel the operation.</param>
+    /// <param name="cancellationToken">A token to cancel the operation.</param>
+    /// <returns>A task representing the operation.</returns>
+    ValueTask WriteAsync(Stream stream, ulong limit, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Reads data from this buffer to the specified destination buffer. This method will write either as many

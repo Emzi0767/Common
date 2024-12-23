@@ -116,9 +116,22 @@ public sealed class ContinuousMemoryBuffer<T> : IMemoryBuffer<T>
             this.WriteStreamUnseekable(stream);
     }
 
-    private void WriteStreamSeekable(Stream stream)
+    /// <inheritdoc />
+    public void Write(Stream stream, ulong limit)
+    {
+        if (this._isDisposed)
+            ThrowHelper.BufferDisposed();
+
+        if (stream.CanSeek)
+            this.WriteStreamSeekable(stream, limit);
+        else
+            this.WriteStreamUnseekable(stream, limit);
+    }
+
+    private void WriteStreamSeekable(Stream stream, ulong? limit = null)
     {
         var readLength = stream.Length - stream.Position;
+        readLength = limit is not null && (ulong)readLength > limit ? (int)limit : readLength;
         readLength -= readLength % this._itemSize;
 
         if (this._pos + readLength > int.MaxValue)
@@ -134,7 +147,7 @@ public sealed class ContinuousMemoryBuffer<T> : IMemoryBuffer<T>
         }
     }
 
-    private void WriteStreamUnseekable(Stream stream)
+    private void WriteStreamUnseekable(Stream stream, ulong? limit = null)
     {
         var readLength = 4096;
         readLength -= readLength % this._itemSize;
@@ -142,11 +155,18 @@ public sealed class ContinuousMemoryBuffer<T> : IMemoryBuffer<T>
         var br = 0;
         do
         {
+            if (limit is not null && (ulong)readLength > limit)
+            {
+                var newLimit = limit - (ulong)readLength;
+                readLength = (int)limit;
+                limit = newLimit;
+            }
+
             this.EnsureSize(this._pos + readLength);
             br = stream.Read(this._buff.Slice(this._pos, readLength).Span);
             this._pos += br;
         }
-        while (br != 0);
+        while (br != 0 && limit is not 0);
     }
 
     /// <inheritdoc />
@@ -156,13 +176,25 @@ public sealed class ContinuousMemoryBuffer<T> : IMemoryBuffer<T>
             ThrowHelper.BufferDisposed();
 
         return stream.CanSeek
-            ? this.WriteStreamSeekableAsync(stream, cancellationToken)
-            : this.WriteStreamUnseekableAsync(stream, cancellationToken);
+            ? this.WriteStreamSeekableAsync(stream, null, cancellationToken)
+            : this.WriteStreamUnseekableAsync(stream, null, cancellationToken);
     }
 
-    private async ValueTask WriteStreamSeekableAsync(Stream stream, CancellationToken cancellationToken)
+    /// <inheritdoc />
+    public ValueTask WriteAsync(Stream stream, ulong limit, CancellationToken cancellationToken = default)
+    {
+        if (this._isDisposed)
+            ThrowHelper.BufferDisposed();
+
+        return stream.CanSeek
+            ? this.WriteStreamSeekableAsync(stream, limit, cancellationToken)
+            : this.WriteStreamUnseekableAsync(stream, limit, cancellationToken);
+    }
+
+    private async ValueTask WriteStreamSeekableAsync(Stream stream, ulong? limit, CancellationToken cancellationToken)
     {
         var readLength = stream.Length - stream.Position;
+        readLength = limit is not null && (ulong)readLength > limit ? (int)limit : readLength;
         readLength -= readLength % this._itemSize;
 
         if (this._pos + readLength > int.MaxValue)
@@ -178,7 +210,7 @@ public sealed class ContinuousMemoryBuffer<T> : IMemoryBuffer<T>
         }
     }
 
-    private async ValueTask WriteStreamUnseekableAsync(Stream stream, CancellationToken cancellationToken)
+    private async ValueTask WriteStreamUnseekableAsync(Stream stream, ulong? limit, CancellationToken cancellationToken)
     {
         var readLength = 4096;
         readLength -= readLength % this._itemSize;

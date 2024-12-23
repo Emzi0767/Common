@@ -135,9 +135,22 @@ public sealed class MemoryBuffer<T> : IMemoryBuffer<T>
             this.WriteStreamUnseekable(stream);
     }
 
-    private void WriteStreamSeekable(Stream stream)
+    /// <inheritdoc />
+    public void Write(Stream stream, ulong limit)
+    {
+        if (this._isDisposed)
+            ThrowHelper.BufferDisposed();
+
+        if (stream.CanSeek)
+            this.WriteStreamSeekable(stream, limit);
+        else
+            this.WriteStreamUnseekable(stream, limit);
+    }
+
+    private void WriteStreamSeekable(Stream stream, ulong? limit = null)
     {
         var len = (int)(stream.Length - stream.Position);
+        len = (ulong)len > limit ? (int)limit : len;
         len -= len % this._itemSize;
         this.Grow(len);
 
@@ -165,15 +178,24 @@ public sealed class MemoryBuffer<T> : IMemoryBuffer<T>
         }
     }
 
-    private void WriteStreamUnseekable(Stream stream)
+    private void WriteStreamUnseekable(Stream stream, ulong? limit = null)
     {
         var read = 0;
         var optimalSize = 4096;
         optimalSize -= optimalSize % this._itemSize;
 
         Span<byte> buffs = stackalloc byte[optimalSize];
-        while ((read = stream.Read(buffs)) != 0)
+        while ((read = stream.Read(buffs)) != 0 && limit is not 0)
+        {
+            if (limit is not null && (ulong)read > limit)
+            {
+                var newLimit = limit - (ulong)read;
+                read = (int)limit;
+                limit = newLimit;
+            }
+
             this.Write(MemoryMarshal.Cast<byte, T>(buffs[..read]));
+        }
     }
 
     /// <inheritdoc />
@@ -183,13 +205,25 @@ public sealed class MemoryBuffer<T> : IMemoryBuffer<T>
             ThrowHelper.BufferDisposed();
 
         return stream.CanSeek
-            ? this.WriteStreamSeekableAsync(stream, cancellationToken)
-            : this.WriteStreamUnseekableAsync(stream, cancellationToken);
+            ? this.WriteStreamSeekableAsync(stream, null, cancellationToken)
+            : this.WriteStreamUnseekableAsync(stream, null, cancellationToken);
     }
 
-    private async ValueTask WriteStreamSeekableAsync(Stream stream, CancellationToken cancellationToken)
+    /// <inheritdoc />
+    public ValueTask WriteAsync(Stream stream, ulong limit, CancellationToken cancellationToken = default)
+    {
+        if (this._isDisposed)
+            ThrowHelper.BufferDisposed();
+
+        return stream.CanSeek
+            ? this.WriteStreamSeekableAsync(stream, limit, cancellationToken)
+            : this.WriteStreamUnseekableAsync(stream, limit, cancellationToken);
+    }
+
+    private async ValueTask WriteStreamSeekableAsync(Stream stream, ulong? limit, CancellationToken cancellationToken)
     {
         var len = (int)(stream.Length - stream.Position);
+        len = limit is not null && (ulong)len > limit ? (int)limit : len;
         len -= len % this._itemSize;
         this.Grow(len);
 
@@ -217,7 +251,7 @@ public sealed class MemoryBuffer<T> : IMemoryBuffer<T>
         }
     }
 
-    private async ValueTask WriteStreamUnseekableAsync(Stream stream, CancellationToken cancellationToken)
+    private async ValueTask WriteStreamUnseekableAsync(Stream stream, ulong? limit, CancellationToken cancellationToken)
     {
         var read = 0;
         var optimalSize = 4096;
@@ -225,8 +259,17 @@ public sealed class MemoryBuffer<T> : IMemoryBuffer<T>
 
         using var buff = this._pool.Rent(optimalSize);
         var buffs = buff.Memory.Slice(0, optimalSize);
-        while ((read = await stream.ReadAsync(buffs, cancellationToken)) != 0)
+        while ((read = await stream.ReadAsync(buffs, cancellationToken)) != 0 && limit is not 0)
+        {
+            if (limit is not null && (ulong)read > limit)
+            {
+                var newLimit = limit - (ulong)read;
+                read = (int)limit;
+                limit = newLimit;
+            }
+
             this.Write(MemoryMarshal.Cast<byte, T>(buffs[..read].Span));
+        }
     }
 
     /// <inheritdoc />

@@ -256,6 +256,36 @@ public sealed class MemoryBufferTests
     }
 
     [DataTestMethod]
+    [DataRow(128 * 1024, 8 * 1024, 12 * 1024, _bufferStandard)]
+    [DataRow(128 * 1024, 16 * 1024, 24 * 1024, _bufferStandard)]
+    [DataRow(128 * 1024, 64 * 1024, 48 * 1024, _bufferStandard)]
+    [DataRow(128 * 1024, 128 * 1024, 96 * 1024, _bufferStandard)]
+    [DataRow(128 * 1024, 8 * 1024, 12 * 1024, _bufferContinuous)]
+    [DataRow(128 * 1024, 16 * 1024, 24 * 1024, _bufferContinuous)]
+    [DataRow(128 * 1024, 64 * 1024, 48 * 1024, _bufferContinuous)]
+    [DataRow(128 * 1024, 128 * 1024, 96 * 1024, _bufferContinuous)]
+    public void TestStreamBoundWrite(int size, int segment, int limit, int type)
+    {
+        var data = new byte[size];
+        var datas = data.AsSpan();
+        this.RNG.GetBytes(datas);
+
+        using var ms = new MemoryStream();
+        ms.Write(data, 0, data.Length);
+        ms.Position = 0;
+
+        using var buff = CreateMemoryBuffer<byte>(type, segment);
+        buff.Write(ms, (ulong)limit);
+
+        Assert.AreEqual((ulong)limit, buff.Count);
+
+        var readout = buff.ToArray();
+        var readouts = readout.AsSpan();
+        Assert.AreEqual(limit, readout.Length);
+        Assert.IsTrue(readouts.SequenceEqual(datas[..limit]));
+    }
+
+    [DataTestMethod]
     [DataRow(128 * 1024, 8 * 1024, _bufferStandard)]
     [DataRow(128 * 1024, 16 * 1024, _bufferStandard)]
     [DataRow(128 * 1024, 64 * 1024, _bufferStandard)]
@@ -281,6 +311,34 @@ public sealed class MemoryBufferTests
         var readout = buff.ToArray();
         Assert.AreEqual(size, readout.Length);
         Assert.IsTrue(readout.SequenceEqual(data));
+    }
+
+    [DataTestMethod]
+    [DataRow(128 * 1024, 8 * 1024, 12 * 1024, _bufferStandard)]
+    [DataRow(128 * 1024, 16 * 1024, 24 * 1024, _bufferStandard)]
+    [DataRow(128 * 1024, 64 * 1024, 48 * 1024, _bufferStandard)]
+    [DataRow(128 * 1024, 128 * 1024, 96 * 1024, _bufferStandard)]
+    [DataRow(128 * 1024, 8 * 1024, 12 * 1024, _bufferContinuous)]
+    [DataRow(128 * 1024, 16 * 1024, 24 * 1024, _bufferContinuous)]
+    [DataRow(128 * 1024, 64 * 1024, 48 * 1024, _bufferContinuous)]
+    [DataRow(128 * 1024, 128 * 1024, 96 * 1024, _bufferContinuous)]
+    public async Task TestStreamBoundWriteAsync(int size, int segment, int limit, int type)
+    {
+        var data = new byte[size];
+        this.RNG.GetBytes(data);
+
+        using var ms = new MemoryStream();
+        ms.Write(data, 0, data.Length);
+        ms.Position = 0;
+
+        using var buff = CreateMemoryBuffer<byte>(type, segment);
+        await buff.WriteAsync(ms, (ulong)limit);
+
+        Assert.AreEqual((ulong)limit, buff.Count);
+
+        var readout = buff.ToArray();
+        Assert.AreEqual(limit, readout.Length);
+        Assert.IsTrue(readout.AsSpan().SequenceEqual(data.AsMemory(0, limit).Span));
     }
 
     [DataTestMethod]
