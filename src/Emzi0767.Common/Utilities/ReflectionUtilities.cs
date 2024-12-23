@@ -16,13 +16,14 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 using System;
+using System.Buffers;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
-using System.Linq.Expressions;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using System.Runtime.Serialization;
 
 namespace Emzi0767.Utilities;
@@ -93,6 +94,36 @@ public static class ReflectionUtilities
         }
     }
 
+    /// <summary>
+    /// Casts a <see cref="Memory{TFrom}"/> instance to <see cref="Memory{TTo}"/>. This effectively reinterprets given
+    /// chunk of memory without copying and converting. Note that this is not guaranteed to be safe, and may crash the
+    /// runtime if used incorrectly.
+    /// </summary>
+    /// <param name="memory">Memory buffer to reinterpret.</param>
+    /// <typeparam name="TFrom">Source type to interpret.</typeparam>
+    /// <typeparam name="TTo">Target type to interpret as.</typeparam>
+    /// <returns>Reinterpreted view over the given memory region.</returns>
+    public static Memory<TTo> Cast<TFrom, TTo>(this Memory<TFrom> memory)
+        where TFrom : unmanaged
+        where TTo : unmanaged
+        => typeof(TFrom) == typeof(TTo)
+            ? Unsafe.As<Memory<TFrom>, Memory<TTo>>(ref memory)
+            : new ReinterpretingMemoryManager<TFrom, TTo>(memory).Memory;
+
+    /// <summary>
+    /// Casts a <see cref="ReadOnlyMemory{TFrom}"/> instance to <see cref="ReadOnlyMemory{TTo}"/>. This effectively
+    /// reinterprets given chunk of memory without copying and converting. Note that this is not guaranteed to be safe,
+    /// and may crash the runtime if used incorrectly.
+    /// </summary>
+    /// <param name="memory">Memory buffer to reinterpret.</param>
+    /// <typeparam name="TFrom">Source type to interpret.</typeparam>
+    /// <typeparam name="TTo">Target type to interpret as.</typeparam>
+    /// <returns>Reinterpreted view over the given memory region.</returns>
+    public static ReadOnlyMemory<TTo> Cast<TFrom, TTo>(this ReadOnlyMemory<TFrom> memory)
+        where TFrom : unmanaged
+        where TTo : unmanaged
+        => MemoryMarshal.AsMemory(memory).Cast<TFrom, TTo>();
+
     private static IEnumerable<(string, Func<T, object>)> GetReadableProperties<T>(this T obj)
     {
         var t = typeof(T);
@@ -154,5 +185,26 @@ public static class ReflectionUtilities
 
         public override object GetBoxed(TObject instance)
             => this._getter(instance);
+    }
+
+    private sealed class ReinterpretingMemoryManager<TFrom, TTo> : MemoryManager<TTo>
+        where TFrom : unmanaged
+        where TTo : unmanaged
+    {
+        private readonly Memory<TFrom> _memory;
+
+        public ReinterpretingMemoryManager(Memory<TFrom> memory)
+        {
+            this._memory = memory;
+        }
+
+        public override Span<TTo> GetSpan()
+            => MemoryMarshal.Cast<TFrom, TTo>(this._memory.Span);
+
+        public override MemoryHandle Pin(int elementIndex = 0) => throw new NotImplementedException();
+        public override void Unpin() => throw new NotImplementedException();
+
+        protected override void Dispose(bool disposing)
+        { }
     }
 }

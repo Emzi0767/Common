@@ -24,6 +24,7 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
+using Emzi0767.Utilities;
 
 namespace Emzi0767.Types;
 
@@ -406,6 +407,51 @@ public sealed class MemoryBuffer<T> : IMemoryBuffer<T>
     }
 
     /// <inheritdoc />
+    public ReadOnlySequence<T> AsSequence()
+    {
+        var len = 0ul;
+        var sequences = new MemoryBufferSegment<T>[this._segments.Count];
+        var last = default(MemoryBufferSegment<T>);
+        for (var i = 0; i < sequences.Length && len < this.Length; ++i)
+        {
+            var mem = this._segments[i].Memory;
+            if (len + (ulong)mem.Length > this.Length)
+                mem = mem[..(int)(this.Length - len)];
+
+            var tmem = mem.Cast<byte, T>();
+            last = last?.WithNext(tmem) ?? new(tmem);
+            sequences[i] = last;
+            len += (ulong)mem.Length;
+        }
+
+        return last is null
+            ? ReadOnlySequence<T>.Empty
+            : new ReadOnlySequence<T>(sequences[0], 0, last, last.Memory.Length);
+    }
+
+    /// <inheritdoc />
+    public ReadOnlySequence<byte> AsByteSequence()
+    {
+        var len = 0ul;
+        var sequences = new MemoryBufferSegment<byte>[this._segments.Count];
+        var last = default(MemoryBufferSegment<byte>);
+        for (var i = 0; i < sequences.Length && len < this.Length; ++i)
+        {
+            var mem = this._segments[i].Memory;
+            if (len + (ulong)mem.Length > this.Length)
+                mem = mem[..(int)(this.Length - len)];
+
+            last = last?.WithNext(mem) ?? new(mem);
+            sequences[i] = last;
+            len += (ulong)mem.Length;
+        }
+
+        return last is null
+            ? ReadOnlySequence<byte>.Empty
+            : new ReadOnlySequence<byte>(sequences[0], 0, last, last.Memory.Length);
+    }
+
+    /// <inheritdoc />
     public void CopyTo(Stream destination)
     {
         if (this._isDisposed)
@@ -477,8 +523,22 @@ public sealed class MemoryBuffer<T> : IMemoryBuffer<T>
 
     Memory<T> IBufferWriter<T>.GetMemory(int sizeHint)
     {
-        ThrowHelper.NotSupported();
-        return Memory<T>.Empty;
+        var length = sizeHint * this._itemSize;
+        if (this._segNo >= this._segments.Count)
+            this._segments.Add(new(this._pool.Rent(length), this._itemSize));
+
+        var seg = this._segments[this._segNo];
+        if (length + this._lastSegmentLength <= seg.Length)
+            return seg.Memory[this._lastSegmentLength..].Cast<byte, T>();
+
+        seg.Length = this._lastSegmentLength;
+        this._segNo++;
+        this._lastSegmentLength = 0;
+        var owner = this._pool.Rent(length);
+        seg = new MemoryOwnerInfo(owner, this._itemSize);
+        this._segments.Add(seg);
+
+        return seg.Memory.Cast<byte, T>();
     }
 
     Span<T> IBufferWriter<T>.GetSpan(int sizeHint)
@@ -495,9 +555,10 @@ public sealed class MemoryBuffer<T> : IMemoryBuffer<T>
         this._segNo++;
         this._lastSegmentLength = 0;
         var owner = this._pool.Rent(length);
-        this._segments.Add(new(owner, this._itemSize));
+        seg = new MemoryOwnerInfo(owner, this._itemSize);
+        this._segments.Add(seg);
 
-        return MemoryMarshal.Cast<byte, T>(owner.Memory.Span);
+        return MemoryMarshal.Cast<byte, T>(seg.Memory.Span);
     }
 
     private void Grow(int minAmount)

@@ -159,6 +159,18 @@ public interface IMemoryBuffer<T> : IBufferWriter<T>, IDisposable
     T[] ToArray();
 
     /// <summary>
+    /// Returns a view over this buffer's memory as a <see cref="ReadOnlySequence{T}"/>.
+    /// </summary>
+    /// <returns>Sequence view of this buffer.</returns>
+    ReadOnlySequence<T> AsSequence();
+
+    /// <summary>
+    /// Returns a view over this buffer's memory as a <see cref="ReadOnlySequence{T}"/>, where T is <see cref="byte"/>.
+    /// </summary>
+    /// <returns>Byte sequence view of this buffer.</returns>
+    ReadOnlySequence<byte> AsByteSequence();
+
+    /// <summary>
     /// Copies all the data from this buffer to a stream.
     /// </summary>
     /// <param name="destination">Stream to copy this buffer's data to.</param>

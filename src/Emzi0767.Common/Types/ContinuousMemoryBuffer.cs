@@ -22,6 +22,7 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
+using Emzi0767.Utilities;
 
 namespace Emzi0767.Types;
 
@@ -279,6 +280,20 @@ public sealed class ContinuousMemoryBuffer<T> : IMemoryBuffer<T>
     }
 
     /// <inheritdoc />
+    public ReadOnlySequence<T> AsSequence()
+    {
+        var seg = new MemoryBufferSegment<T>(this._buff[..this._pos].Cast<byte, T>());
+        return new ReadOnlySequence<T>(seg, 0, seg, seg.Memory.Length);
+    }
+
+    /// <inheritdoc />
+    public ReadOnlySequence<byte> AsByteSequence()
+    {
+        var seg = new MemoryBufferSegment<byte>(this._buff[..this._pos]);
+        return new ReadOnlySequence<byte>(seg, 0, seg, seg.Memory.Length);
+    }
+
+    /// <inheritdoc />
     public void CopyTo(Stream destination)
     {
         if (this._isDisposed)
@@ -326,8 +341,8 @@ public sealed class ContinuousMemoryBuffer<T> : IMemoryBuffer<T>
 
     Memory<T> IBufferWriter<T>.GetMemory(int sizeHint)
     {
-        ThrowHelper.NotSupported();
-        return Memory<T>.Empty;
+        this.EnsureSize(this._pos + (sizeHint * this._itemSize));
+        return this._buff[this._pos..].Cast<byte, T>();
     }
 
     Span<T> IBufferWriter<T>.GetSpan(int sizeHint)
