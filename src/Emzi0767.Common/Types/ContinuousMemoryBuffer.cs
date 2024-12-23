@@ -130,6 +130,9 @@ public sealed class ContinuousMemoryBuffer<T> : IMemoryBuffer<T>
 
     private void WriteStreamSeekable(Stream stream, ulong? limit = null)
     {
+        if (limit is not null)
+            limit -= limit % (ulong)this._itemSize;
+
         var readLength = stream.Length - stream.Position;
         readLength = limit is not null && (ulong)readLength > limit ? (int)limit : readLength;
         readLength -= readLength % this._itemSize;
@@ -149,22 +152,22 @@ public sealed class ContinuousMemoryBuffer<T> : IMemoryBuffer<T>
 
     private void WriteStreamUnseekable(Stream stream, ulong? limit = null)
     {
+        if (limit is not null)
+            limit -= limit % (ulong)this._itemSize;
+
         var readLength = 4096;
         readLength -= readLength % this._itemSize;
 
         var br = 0;
         do
         {
-            if (limit is not null && (ulong)readLength > limit)
-            {
-                var newLimit = limit - (ulong)readLength;
-                readLength = (int)limit;
-                limit = newLimit;
-            }
-
-            this.EnsureSize(this._pos + readLength);
-            br = stream.Read(this._buff.Slice(this._pos, readLength).Span);
+            var read = (int)Math.Min(limit ?? (ulong)readLength, (ulong)readLength);
+            this.EnsureSize(this._pos + read);
+            br = stream.Read(this._buff.Slice(this._pos, read).Span);
             this._pos += br;
+
+            if (limit is not null)
+                limit -= (ulong)br;
         }
         while (br != 0 && limit is not 0);
     }
@@ -193,6 +196,9 @@ public sealed class ContinuousMemoryBuffer<T> : IMemoryBuffer<T>
 
     private async ValueTask WriteStreamSeekableAsync(Stream stream, ulong? limit, CancellationToken cancellationToken)
     {
+        if (limit is not null)
+            limit -= limit % (ulong)this._itemSize;
+
         var readLength = stream.Length - stream.Position;
         readLength = limit is not null && (ulong)readLength > limit ? (int)limit : readLength;
         readLength -= readLength % this._itemSize;
@@ -212,15 +218,22 @@ public sealed class ContinuousMemoryBuffer<T> : IMemoryBuffer<T>
 
     private async ValueTask WriteStreamUnseekableAsync(Stream stream, ulong? limit, CancellationToken cancellationToken)
     {
+        if (limit is not null)
+            limit -= limit % (ulong)this._itemSize;
+
         var readLength = 4096;
         readLength -= readLength % this._itemSize;
 
         var br = 0;
         do
         {
-            this.EnsureSize(this._pos + readLength);
-            br = await stream.ReadAsync(this._buff.Slice(this._pos, readLength), cancellationToken).ConfigureAwait(false);
+            var read = (int)Math.Min(limit ?? (ulong)readLength, (ulong)readLength);
+            this.EnsureSize(this._pos + read);
+            br = await stream.ReadAsync(this._buff.Slice(this._pos, read), cancellationToken).ConfigureAwait(false);
             this._pos += br;
+
+            if (limit is not null)
+                limit -= (ulong)br;
         }
         while (br != 0);
     }

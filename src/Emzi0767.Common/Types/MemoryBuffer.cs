@@ -149,6 +149,9 @@ public sealed class MemoryBuffer<T> : IMemoryBuffer<T>
 
     private void WriteStreamSeekable(Stream stream, ulong? limit = null)
     {
+        if (limit is not null)
+            limit -= limit % (ulong)this._itemSize;
+
         var len = (int)(stream.Length - stream.Position);
         len = (ulong)len > limit ? (int)limit : len;
         len -= len % this._itemSize;
@@ -180,21 +183,24 @@ public sealed class MemoryBuffer<T> : IMemoryBuffer<T>
 
     private void WriteStreamUnseekable(Stream stream, ulong? limit = null)
     {
-        var read = 0;
+        if (limit is not null)
+            limit -= limit % (ulong)this._itemSize;
+
         var optimalSize = 4096;
         optimalSize -= optimalSize % this._itemSize;
 
         Span<byte> buffs = stackalloc byte[optimalSize];
-        while ((read = stream.Read(buffs)) != 0 && limit is not 0)
+        while (limit is not 0)
         {
-            if (limit is not null && (ulong)read > limit)
-            {
-                var newLimit = limit - (ulong)read;
-                read = (int)limit;
-                limit = newLimit;
-            }
+            var read = (int)Math.Min(limit ?? (ulong)optimalSize, (ulong)optimalSize);
+            var b = buffs[..read];
+            var br = stream.Read(b);
+            if (br == 0)
+                break;
 
-            this.Write(MemoryMarshal.Cast<byte, T>(buffs[..read]));
+            this.Write(MemoryMarshal.Cast<byte, T>(b[..br]));
+            if (limit is not null)
+                limit -= (ulong)br;
         }
     }
 
@@ -222,6 +228,9 @@ public sealed class MemoryBuffer<T> : IMemoryBuffer<T>
 
     private async ValueTask WriteStreamSeekableAsync(Stream stream, ulong? limit, CancellationToken cancellationToken)
     {
+        if (limit is not null)
+            limit -= limit % (ulong)this._itemSize;
+
         var len = (int)(stream.Length - stream.Position);
         len = limit is not null && (ulong)len > limit ? (int)limit : len;
         len -= len % this._itemSize;
@@ -237,7 +246,7 @@ public sealed class MemoryBuffer<T> : IMemoryBuffer<T>
                 : avs;
             var dmem = mem.Slice(this._lastSegmentLength, avs);
 
-            var br = await stream.ReadAsync(dmem, cancellationToken);
+            var br = await stream.ReadAsync(dmem, cancellationToken).ConfigureAwait(false);
             len -= br;
 
             this.Length += (ulong)br;
@@ -253,22 +262,25 @@ public sealed class MemoryBuffer<T> : IMemoryBuffer<T>
 
     private async ValueTask WriteStreamUnseekableAsync(Stream stream, ulong? limit, CancellationToken cancellationToken)
     {
-        var read = 0;
+        if (limit is not null)
+            limit -= limit % (ulong)this._itemSize;
+
         var optimalSize = 4096;
         optimalSize -= optimalSize % this._itemSize;
 
         using var buff = this._pool.Rent(optimalSize);
         var buffs = buff.Memory.Slice(0, optimalSize);
-        while ((read = await stream.ReadAsync(buffs, cancellationToken)) != 0 && limit is not 0)
+        while (limit is not 0)
         {
-            if (limit is not null && (ulong)read > limit)
-            {
-                var newLimit = limit - (ulong)read;
-                read = (int)limit;
-                limit = newLimit;
-            }
+            var read = (int)Math.Min(limit ?? (ulong)optimalSize, (ulong)optimalSize);
+            var b = buffs[..read];
+            var br = await stream.ReadAsync(b, cancellationToken).ConfigureAwait(false);
+            if (br == 0)
+                break;
 
-            this.Write(MemoryMarshal.Cast<byte, T>(buffs[..read].Span));
+            this.Write(MemoryMarshal.Cast<byte, T>(b[..br].Span));
+            if (limit is not null)
+                limit -= (ulong)br;
         }
     }
 
