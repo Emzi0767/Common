@@ -1,4 +1,4 @@
-﻿// This file is part of Emzi0767.Common project.
+// This file is part of Emzi0767.Common project.
 //
 // Copyright © 2020-2025 Emzi0767
 //
@@ -53,7 +53,7 @@ public sealed class SpanLookupDictTests
             Assert.IsFalse(dict.TryGetValue(k, out _));
 
         foreach (var (k, v) in this.TestValues)
-            Assert.ThrowsException<DuplicateKeyException>(() => dict.Add(k, v));
+            Assert.Throws<DuplicateKeyException>(() => dict.Add(k, v));
         Assert.AreEqual(this.TestValues.Count(), dict.Count);
 
         foreach (var (k, v) in this.TestValues)
@@ -91,7 +91,7 @@ public sealed class SpanLookupDictTests
             Assert.IsFalse(dict.TryGetValue(k.AsSpan(), out _));
 
         foreach (var (k, v) in this.TestValues)
-            Assert.ThrowsException<DuplicateKeyException>(() => dict.Add(k.AsSpan(), v));
+            Assert.Throws<DuplicateKeyException>(() => dict.Add(k.AsSpan(), v));
         Assert.AreEqual(this.TestValues.Count(), dict.Count);
 
         foreach (var (k, v) in this.TestValues)
@@ -112,7 +112,7 @@ public sealed class SpanLookupDictTests
         var baseDict = new Dictionary<string, int>();
         foreach (var (k, v) in this.TestValues)
             baseDict[k] = v;
-        Assert.AreEqual(this.TestValues.Count(), baseDict.Count);
+        Assert.HasCount(this.TestValues.Count(), baseDict);
         foreach (var (k, v) in this.TestValues)
             Assert.IsTrue(baseDict.ContainsKey(k));
         foreach (var (k, v) in this.NonTestValues)
@@ -280,7 +280,7 @@ public sealed class SpanLookupDictTests
         Assert.AreEqual(dict.Count, dkeys.Count());
         foreach (var k in dkeys)
         {
-            Assert.IsTrue(keys.Contains(k));
+            Assert.Contains(k, keys);
             i++;
         }
 
@@ -292,7 +292,7 @@ public sealed class SpanLookupDictTests
         Assert.AreEqual(dict.Count, dvals.Count());
         foreach (var v in dvals)
         {
-            Assert.IsTrue(vals.Contains(v));
+            Assert.Contains(v, vals);
             i++;
         }
 

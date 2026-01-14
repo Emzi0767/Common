@@ -23,14 +23,14 @@
   <PropertyGroup>
     <AssemblyName>Emzi0767.Common</AssemblyName>
     <RootNamespace>Emzi0767</RootNamespace>
-    <VersionPrefix>2.12.1</VersionPrefix>
-    <LangVersion>12.0</LangVersion>
+    <VersionPrefix>2.13.0</VersionPrefix>
+    <LangVersion>14.0</LangVersion>
     <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
     <Optimize>True</Optimize>
     <GenerateDocumentationFile>True</GenerateDocumentationFile>
     <DebugType>Portable</DebugType>
     <OutputType>Library</OutputType>
-    <TargetFrameworks>net8.0</TargetFrameworks>
+    <TargetFrameworks>net10.0</TargetFrameworks>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -64,10 +64,5 @@
     <AssemblyVersion>$(VersionPrefix).0</AssemblyVersion>
     <FileVersion>$(VersionPrefix).0</FileVersion>
   </PropertyGroup>
-
-  <ItemGroup>
-    <PackageReference Include="System.Collections.Immutable" Version="9.0.0" />
-    <PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="6.1.0" />
-  </ItemGroup>
 
 </Project>

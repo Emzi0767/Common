@@ -1,4 +1,4 @@
-﻿// This file is part of Emzi0767.Common project.
+// This file is part of Emzi0767.Common project.
 //
 // Copyright © 2020-2025 Emzi0767
 //
@@ -35,7 +35,7 @@ public sealed class SpanLookupRoDictTests
         var baseDict = new Dictionary<string, int>();
         foreach (var (k, v) in this.TestValues)
             baseDict[k] = v;
-        Assert.AreEqual(this.TestValues.Count(), baseDict.Count);
+        Assert.HasCount(this.TestValues.Count(), baseDict);
         foreach (var (k, v) in this.TestValues)
             Assert.IsTrue(baseDict.ContainsKey(k));
         foreach (var (k, v) in this.NonTestValues)
@@ -145,7 +145,7 @@ public sealed class SpanLookupRoDictTests
         Assert.AreEqual(dict.Count, dkeys.Count());
         foreach (var k in dkeys)
         {
-            Assert.IsTrue(keys.Contains(k));
+            Assert.Contains(k, keys);
             i++;
         }
 
@@ -157,7 +157,7 @@ public sealed class SpanLookupRoDictTests
         Assert.AreEqual(dict.Count, dvals.Count());
         foreach (var v in dvals)
         {
-            Assert.IsTrue(vals.Contains(v));
+            Assert.Contains(v, vals);
             i++;
         }
 

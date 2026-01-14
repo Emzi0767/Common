@@ -17,48 +17,71 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
+using System.Runtime.ExceptionServices;
 using Emzi0767.Types;
 
 namespace Emzi0767;
 
 internal static class ThrowHelper
 {
+    [DoesNotReturn]
     public static void BufferDisposed()
         => throw new ObjectDisposedException("This buffer is disposed.");
 
+    [DoesNotReturn]
     public static void NotSupported()
         => throw new NotSupportedException();
 
+    [DoesNotReturn]
     public static void Argument(string arg, string msg)
         => throw new ArgumentException(msg, arg);
 
+    [DoesNotReturn]
     public static void ArgumentNull(string arg)
         => throw new ArgumentNullException(arg);
 
+    [DoesNotReturn]
     public static void ArgumentNull(string arg, string msg)
         => throw new ArgumentNullException(arg, msg);
 
+    [DoesNotReturn]
     public static void ArgumentOutOfRange(string arg)
         => throw new ArgumentOutOfRangeException(arg);
 
+    [DoesNotReturn]
     public static void ArgumentOutOfRange(string arg, string msg)
         => throw new ArgumentOutOfRangeException(arg, msg);
 
+    [DoesNotReturn]
     public static void NullReference()
         => throw new NullReferenceException();
 
+    [DoesNotReturn]
     public static void Aggregate(string msg, IEnumerable<Exception> exceptions)
         => throw new AggregateException(msg, exceptions);
 
+    [DoesNotReturn]
     public static void KeyNotFound()
         => throw new KeyNotFoundException();
 
+    [DoesNotReturn]
     public static void DuplicateKey()
         => throw new DuplicateKeyException();
 
+    [DoesNotReturn]
     public static void InvalidOperation(string msg)
         => throw new InvalidOperationException(msg);
 
-    public static void Instance(Exception ex)
-        => throw ex;
+    [DoesNotReturn]
+    public static void Instance(Exception ex, bool keepStackTrace)
+    {
+        if (keepStackTrace)
+        {
+            ExceptionDispatchInfo.Capture(ex).Throw();
+            return;
+        }
+
+        throw ex;
+    }
 }

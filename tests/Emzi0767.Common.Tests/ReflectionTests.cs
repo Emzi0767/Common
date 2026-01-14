@@ -1,4 +1,4 @@
-﻿// This file is part of Emzi0767.Common project.
+// This file is part of Emzi0767.Common project.
 //
 // Copyright © 2020-2025 Emzi0767
 //
@@ -103,9 +103,9 @@ public sealed class ReflectionTests
         Assert.AreEqual(y.Number, dyf["Number"]);
         Assert.AreNotEqual(x.Number, dyf["Number"]);
         Assert.AreNotEqual(dxf["Text"], dxf["Number"]);
-        Assert.AreEqual(true, dzf["IsInitialized"]);
+        Assert.IsTrue((bool?)dzf["IsInitialized"]);
         Assert.AreEqual(43, dwf["Value"]);
-        Assert.AreEqual(false, dvf["IsInitialized"]);
+        Assert.IsFalse((bool?)dvf["IsInitialized"]);
 
         var sw = new Stopwatch();
         sw.Start();
@@ -120,7 +120,7 @@ public sealed class ReflectionTests
         sw.Stop();
         var tSlow = sw.ElapsedTicks;
 
-        Assert.IsTrue(tFast < tSlow);
+        Assert.IsLessThan(tSlow, tFast);
     }
 
     [TestMethod]

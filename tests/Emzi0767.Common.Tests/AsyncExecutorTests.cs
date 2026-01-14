@@ -1,4 +1,4 @@
-﻿// This file is part of Emzi0767.Common project.
+// This file is part of Emzi0767.Common project.
 //
 // Copyright © 2020-2025 Emzi0767
 //
@@ -16,6 +16,7 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Threading;
 using System.Threading.Tasks;
 using Emzi0767.Utilities;
@@ -39,11 +40,11 @@ public sealed class AsyncExecutorTests
         Assert.AreEqual(2, x.Instance);
 
         // Run a faulting void and test that it throws
-        Assert.ThrowsException<Exception>(() => this.Executor.Execute(this.FaultingVoidAsync(x)));
+        Assert.Throws<Exception>(() => this.Executor.Execute(this.FaultingVoidAsync(x)));
         Assert.AreEqual(4, x.Instance);
 
         // Run another faulting void and test that it throws
-        Assert.ThrowsException<InvalidOperationException>(() => this.Executor.Execute(this.FaultingVoid2Async()));
+        Assert.Throws<InvalidOperationException>(() => this.Executor.Execute(this.FaultingVoid2Async()));
     }
 
     [TestMethod]
@@ -59,29 +60,30 @@ public sealed class AsyncExecutorTests
         Assert.IsTrue(ReferenceEquals(x, y));
 
         // Run a faulting type-returning task and test that it throws
-        Assert.ThrowsException<Exception>(() => y = this.Executor.Execute(this.FaultingTypeAsync(x)));
+        Assert.Throws<Exception>(() => y = this.Executor.Execute(this.FaultingTypeAsync(x)));
         Assert.AreEqual(4, x.Instance);
         Assert.AreEqual(4, y.Instance);
         Assert.IsTrue(ReferenceEquals(x, y));
 
         // Run another faulting type-returning task and test that it throws
-        Assert.ThrowsException<InvalidOperationException>(() => y = this.Executor.Execute(this.FaultingType2Async()));
+        Assert.Throws<InvalidOperationException>(() => y = this.Executor.Execute(this.FaultingType2Async()));
     }
 
     [TestMethod]
+    [SuppressMessage("Design", "MSTEST0032:Assertion condition is always true", Justification = "Intentional")]
     public void TestCancellationAsync()
     {
         using (var cts = new CancellationTokenSource())
         {
             _ = Task.Delay(100).ContinueWith(t => cts.Cancel());
-            Assert.ThrowsException<TaskCanceledException>(() => this.Executor.Execute(Task.Delay(500, cts.Token)));
+            Assert.Throws<TaskCanceledException>(() => this.Executor.Execute(Task.Delay(500, cts.Token)));
         }
 
         // infinite wait?
         using (var cts = new CancellationTokenSource())
         {
             _ = Task.Delay(100).ContinueWith(t => cts.Cancel());
-            Assert.ThrowsException<TaskCanceledException>(() => this.Executor.Execute(Task.Delay(-1, cts.Token)));
+            Assert.Throws<TaskCanceledException>(() => this.Executor.Execute(Task.Delay(-1, cts.Token)));
         }
 
         Assert.IsTrue(true, "Reached this point.");

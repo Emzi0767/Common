@@ -1,4 +1,4 @@
-﻿// This file is part of Emzi0767.Common project.
+// This file is part of Emzi0767.Common project.
 //
 // Copyright © 2020-2025 Emzi0767
 //
@@ -47,7 +47,7 @@ public sealed class MemoryBufferTests
             _ => null
         };
 
-    [DataTestMethod]
+    [TestMethod]
     [DataRow(32 * 1024, 16 * 1024, _bufferStandard)]
     [DataRow(32 * 1024, 32 * 1024, _bufferStandard)]
     [DataRow(32 * 1024, 64 * 1024, _bufferStandard)]
@@ -70,7 +70,7 @@ public sealed class MemoryBufferTests
         using var buff = CreateMemoryBuffer<byte>(type, segment);
         buff.Write(datas);
 
-        Assert.IsTrue(buff.Capacity >= (ulong)size);
+        Assert.IsGreaterThanOrEqualTo((ulong)size, buff.Capacity);
         Assert.AreEqual((ulong)size, buff.Length);
 
         buff.Read(datat, 0, out var written);
@@ -79,7 +79,7 @@ public sealed class MemoryBufferTests
         Assert.AreEqual((ulong)written, buff.Length);
     }
 
-    [DataTestMethod]
+    [TestMethod]
     [DataRow(128 * 1024, 16 * 1024, 16, _bufferStandard)]
     [DataRow(128 * 1024, 16 * 1024, 384, _bufferStandard)]
     [DataRow(128 * 1024, 16 * 1024, 512, _bufferStandard)]
@@ -101,7 +101,7 @@ public sealed class MemoryBufferTests
         for (var i = 0; i < size; i += chunk)
             buff.Write(datas.Slice(i, Math.Min(chunk, datas.Length - i)));
 
-        Assert.IsTrue(buff.Capacity >= (ulong)size);
+        Assert.IsGreaterThanOrEqualTo((ulong)size, buff.Capacity);
         Assert.AreEqual((ulong)size, buff.Length);
 
         buff.Read(datat, 0, out var written);
@@ -110,7 +110,7 @@ public sealed class MemoryBufferTests
         Assert.AreEqual((ulong)written, buff.Length);
     }
 
-    [DataTestMethod]
+    [TestMethod]
     [DataRow(128 * 1024, 8 * 1024, _bufferStandard)]
     [DataRow(128 * 1024, 16 * 1024, _bufferStandard)]
     [DataRow(128 * 1024, 64 * 1024, _bufferStandard)]
@@ -128,16 +128,16 @@ public sealed class MemoryBufferTests
         using var buff = CreateMemoryBuffer<byte>(type, segment);
         buff.Write(datas);
 
-        Assert.IsTrue(buff.Capacity >= (ulong)size);
+        Assert.IsGreaterThanOrEqualTo((ulong)size, buff.Capacity);
         Assert.AreEqual((ulong)size, buff.Length);
 
         var readout = buff.ToArray();
         var readouts = readout.AsSpan();
-        Assert.AreEqual(size, readout.Length);
+        Assert.HasCount(size, readout);
         Assert.IsTrue(readouts.SequenceEqual(datas));
     }
 
-    [DataTestMethod]
+    [TestMethod]
     [DataRow(128 * 1024, 8 * 1024, 12 * 1024, 3UL * 1024, _bufferStandard)]
     [DataRow(128 * 1024, 16 * 1024, 24 * 1024, 32UL * 1024, _bufferStandard)]
     [DataRow(128 * 1024, 64 * 1024, 4 * 1024, 66UL * 1024, _bufferStandard)]
@@ -155,7 +155,7 @@ public sealed class MemoryBufferTests
         using var buff = CreateMemoryBuffer<byte>(type, segment);
         buff.Write(datas);
 
-        Assert.IsTrue(buff.Capacity >= (ulong)size);
+        Assert.IsGreaterThanOrEqualTo((ulong)size, buff.Capacity);
         Assert.AreEqual((ulong)size, buff.Length);
 
         var readout = new byte[arraySize];
@@ -165,7 +165,7 @@ public sealed class MemoryBufferTests
         Assert.IsTrue(readouts.SequenceEqual(datas.Slice((int)start, arraySize)));
     }
 
-    [DataTestMethod]
+    [TestMethod]
     [DataRow(128 * 1024, 8 * 1024, _bufferStandard)]
     [DataRow(128 * 1024, 16 * 1024, _bufferStandard)]
     [DataRow(128 * 1024, 64 * 1024, _bufferStandard)]
@@ -183,7 +183,7 @@ public sealed class MemoryBufferTests
         using var buff = CreateMemoryBuffer<byte>(type, segment);
         buff.Write(datas);
 
-        Assert.IsTrue(buff.Capacity >= (ulong)size);
+        Assert.IsGreaterThanOrEqualTo((ulong)size, buff.Capacity);
         Assert.AreEqual((ulong)size, buff.Length);
 
         using var ms = new MemoryStream();
@@ -192,11 +192,11 @@ public sealed class MemoryBufferTests
 
         var readout = ms.ToArray();
         var readouts = readout.AsSpan();
-        Assert.AreEqual(size, readout.Length);
+        Assert.HasCount(size, readout);
         Assert.IsTrue(readouts.SequenceEqual(datas));
     }
 
-    [DataTestMethod]
+    [TestMethod]
     [DataRow(128 * 1024, 8 * 1024, _bufferStandard)]
     [DataRow(128 * 1024, 16 * 1024, _bufferStandard)]
     [DataRow(128 * 1024, 64 * 1024, _bufferStandard)]
@@ -213,7 +213,7 @@ public sealed class MemoryBufferTests
         using var buff = CreateMemoryBuffer<byte>(type, segment);
         buff.Write(data);
 
-        Assert.IsTrue(buff.Capacity >= (ulong)size);
+        Assert.IsGreaterThanOrEqualTo((ulong)size, buff.Capacity);
         Assert.AreEqual((ulong)size, buff.Length);
 
         using var ms = new MemoryStream();
@@ -221,11 +221,11 @@ public sealed class MemoryBufferTests
         Assert.AreEqual((long)buff.Length, ms.Length);
 
         var readout = ms.ToArray();
-        Assert.AreEqual(size, readout.Length);
+        Assert.HasCount(size, readout);
         Assert.IsTrue(readout.SequenceEqual(data));
     }
 
-    [DataTestMethod]
+    [TestMethod]
     [DataRow(128 * 1024, 8 * 1024, _bufferStandard)]
     [DataRow(128 * 1024, 16 * 1024, _bufferStandard)]
     [DataRow(128 * 1024, 64 * 1024, _bufferStandard)]
@@ -251,11 +251,11 @@ public sealed class MemoryBufferTests
 
         var readout = buff.ToArray();
         var readouts = readout.AsSpan();
-        Assert.AreEqual(size, readout.Length);
+        Assert.HasCount(size, readout);
         Assert.IsTrue(readouts.SequenceEqual(datas));
     }
 
-    [DataTestMethod]
+    [TestMethod]
     [DataRow(128 * 1024, 8 * 1024, 12 * 1024, _bufferStandard)]
     [DataRow(128 * 1024, 16 * 1024, 24 * 1024, _bufferStandard)]
     [DataRow(128 * 1024, 64 * 1024, 48 * 1024, _bufferStandard)]
@@ -281,11 +281,11 @@ public sealed class MemoryBufferTests
 
         var readout = buff.ToArray();
         var readouts = readout.AsSpan();
-        Assert.AreEqual(limit, readout.Length);
+        Assert.HasCount(limit, readout);
         Assert.IsTrue(readouts.SequenceEqual(datas[..limit]));
     }
 
-    [DataTestMethod]
+    [TestMethod]
     [DataRow(128 * 1024, 8 * 1024, _bufferStandard)]
     [DataRow(128 * 1024, 16 * 1024, _bufferStandard)]
     [DataRow(128 * 1024, 64 * 1024, _bufferStandard)]
@@ -309,11 +309,11 @@ public sealed class MemoryBufferTests
         Assert.AreEqual((long)buff.Length, ms.Length);
 
         var readout = buff.ToArray();
-        Assert.AreEqual(size, readout.Length);
+        Assert.HasCount(size, readout);
         Assert.IsTrue(readout.SequenceEqual(data));
     }
 
-    [DataTestMethod]
+    [TestMethod]
     [DataRow(128 * 1024, 8 * 1024, 12 * 1024, _bufferStandard)]
     [DataRow(128 * 1024, 16 * 1024, 24 * 1024, _bufferStandard)]
     [DataRow(128 * 1024, 64 * 1024, 48 * 1024, _bufferStandard)]
@@ -337,11 +337,11 @@ public sealed class MemoryBufferTests
         Assert.AreEqual((ulong)limit, buff.Count);
 
         var readout = buff.ToArray();
-        Assert.AreEqual(limit, readout.Length);
+        Assert.HasCount(limit, readout);
         Assert.IsTrue(readout.AsSpan().SequenceEqual(data.AsMemory(0, limit).Span));
     }
 
-    [DataTestMethod]
+    [TestMethod]
     [DataRow(128 * 1024, 8 * 1024, _bufferStandard)]
     [DataRow(128 * 1024, 16 * 1024, _bufferStandard)]
     [DataRow(128 * 1024, 64 * 1024, _bufferStandard)]
@@ -371,11 +371,11 @@ public sealed class MemoryBufferTests
 
         var readout = buff.ToArray();
         var readouts = readout.AsSpan();
-        Assert.AreEqual(size, readout.Length);
+        Assert.HasCount(size, readout);
         Assert.IsTrue(readouts.SequenceEqual(datas));
     }
 
-    [DataTestMethod]
+    [TestMethod]
     [DataRow(128 * 1024, 8 * 1024, _bufferStandard)]
     [DataRow(128 * 1024, 16 * 1024, _bufferStandard)]
     [DataRow(128 * 1024, 64 * 1024, _bufferStandard)]
@@ -403,11 +403,11 @@ public sealed class MemoryBufferTests
         await buff.WriteAsync(gzd);
 
         var readout = buff.ToArray();
-        Assert.AreEqual(size, readout.Length);
+        Assert.HasCount(size, readout);
         Assert.IsTrue(readout.SequenceEqual(data));
     }
 
-    [DataTestMethod]
+    [TestMethod]
     [DataRow(128 * 1024, 8 * 1024, _bufferStandard)]
     [DataRow(128 * 1024, 16 * 1024, _bufferStandard)]
     [DataRow(128 * 1024, 64 * 1024, _bufferStandard)]
@@ -425,7 +425,7 @@ public sealed class MemoryBufferTests
         using var buff = CreateMemoryBuffer<byte>(type, segment);
         buff.Write(datas);
 
-        Assert.IsTrue(buff.Capacity >= (ulong)size);
+        Assert.IsGreaterThanOrEqualTo((ulong)size, buff.Capacity);
         Assert.AreEqual((ulong)size, buff.Length);
 
         using var ms = new MemoryStream();
@@ -434,11 +434,11 @@ public sealed class MemoryBufferTests
 
         var readout = ms.ToArray();
         var readouts = readout.AsSpan();
-        Assert.AreEqual(size, readout.Length);
+        Assert.HasCount(size, readout);
         Assert.IsTrue(readouts.SequenceEqual(datas));
     }
 
-    [DataTestMethod]
+    [TestMethod]
     [DataRow(128 * 1024, 8 * 1024, _bufferStandard)]
     [DataRow(128 * 1024, 16 * 1024, _bufferStandard)]
     [DataRow(128 * 1024, 64 * 1024, _bufferStandard)]
@@ -455,7 +455,7 @@ public sealed class MemoryBufferTests
         using var buff = CreateMemoryBuffer<byte>(type, segment);
         buff.Write(data);
 
-        Assert.IsTrue(buff.Capacity >= (ulong)size);
+        Assert.IsGreaterThanOrEqualTo((ulong)size, buff.Capacity);
         Assert.AreEqual((ulong)size, buff.Length);
 
         using var ms = new MemoryStream();
@@ -463,11 +463,11 @@ public sealed class MemoryBufferTests
         Assert.AreEqual((long)buff.Length, ms.Length);
 
         var readout = ms.ToArray();
-        Assert.AreEqual(size, readout.Length);
+        Assert.HasCount(size, readout);
         Assert.IsTrue(readout.SequenceEqual(data));
     }
 
-    [DataTestMethod]
+    [TestMethod]
     [DataRow(128 * 1024, 8 * 1024, 0 * 1024, 128 * 1024, _bufferStandard)]
     [DataRow(128 * 1024, 8 * 1024, 4 * 1024, 120 * 1024, _bufferStandard)]
     [DataRow(128 * 1024, 8 * 1024, 8 * 1024, 112 * 1024, _bufferStandard)]
@@ -487,7 +487,7 @@ public sealed class MemoryBufferTests
         using var buff = CreateMemoryBuffer<byte>(type, segment);
         buff.Write(datas);
 
-        Assert.IsTrue(buff.Capacity >= (ulong)size);
+        Assert.IsGreaterThanOrEqualTo((ulong)size, buff.Capacity);
         Assert.AreEqual((ulong)size, buff.Length);
 
         using var ms = new MemoryStream();
@@ -500,7 +500,7 @@ public sealed class MemoryBufferTests
         Assert.IsTrue(readouts.SequenceEqual(datas.Slice(offset, count)));
     }
 
-    [DataTestMethod]
+    [TestMethod]
     [DataRow(128 * 1024, 8 * 1024, 0 * 1024, 128 * 1024, _bufferStandard)]
     [DataRow(128 * 1024, 8 * 1024, 4 * 1024, 120 * 1024, _bufferStandard)]
     [DataRow(128 * 1024, 8 * 1024, 8 * 1024, 112 * 1024, _bufferStandard)]
@@ -519,7 +519,7 @@ public sealed class MemoryBufferTests
         using var buff = CreateMemoryBuffer<byte>(type, segment);
         buff.Write(data);
 
-        Assert.IsTrue(buff.Capacity >= (ulong)size);
+        Assert.IsGreaterThanOrEqualTo((ulong)size, buff.Capacity);
         Assert.AreEqual((ulong)size, buff.Length);
 
         using var ms = new MemoryStream();
@@ -527,11 +527,11 @@ public sealed class MemoryBufferTests
         Assert.AreEqual(count, ms.Length);
 
         var readout = ms.ToArray();
-        Assert.AreEqual(count, readout.Length);
+        Assert.HasCount(count, readout);
         Assert.IsTrue(readout.SequenceEqual(new ArraySegment<byte>(data, offset, count)));
     }
 
-    [DataTestMethod]
+    [TestMethod]
     [DataRow(1024, 512, 1024, _bufferStandard)]
     [DataRow(1024, 512, 2048, _bufferStandard)]
     [DataRow(2048, 1024, 1024, _bufferStandard)]
@@ -582,7 +582,7 @@ public sealed class MemoryBufferTests
         }
     }
 
-    [DataTestMethod]
+    [TestMethod]
     [DataRow(128 * 1024, 8 * 1024, _bufferStandard)]
     [DataRow(128 * 1024, 16 * 1024, _bufferStandard)]
     [DataRow(128 * 1024, 64 * 1024, _bufferStandard)]
@@ -601,12 +601,12 @@ public sealed class MemoryBufferTests
         buff.Write(datas);
 
         var oldcap = buff.Capacity;
-        Assert.IsTrue(buff.Capacity >= (ulong)size);
+        Assert.IsGreaterThanOrEqualTo((ulong)size, buff.Capacity);
         Assert.AreEqual((ulong)size, buff.Length);
 
         var readout = buff.ToArray();
         var readouts = readout.AsSpan();
-        Assert.AreEqual(size, readout.Length);
+        Assert.HasCount(size, readout);
         Assert.IsTrue(readouts.SequenceEqual(datas));
 
         buff.Clear();
@@ -615,10 +615,10 @@ public sealed class MemoryBufferTests
         Assert.AreEqual(0UL, buff.Length);
 
         readout = buff.ToArray();
-        Assert.AreEqual(0, readout.Length);
+        Assert.IsEmpty(readout);
     }
 
-    [DataTestMethod]
+    [TestMethod]
     [DataRow(128 * 1024, 8 * 1024, _bufferStandard)]
     [DataRow(128 * 1024, 16 * 1024, _bufferStandard)]
     [DataRow(128 * 1024, 64 * 1024, _bufferStandard)]
@@ -636,16 +636,16 @@ public sealed class MemoryBufferTests
         using var buff = CreateMemoryBuffer<short>(type, segment);
         buff.Write(datas);
 
-        Assert.IsTrue(buff.Capacity >= (ulong)size);
+        Assert.IsGreaterThanOrEqualTo((ulong)size, buff.Capacity);
         Assert.AreEqual((ulong)size, buff.Count);
 
         var readout = buff.ToArray();
         var readouts = readout.AsSpan();
-        Assert.AreEqual(size, readout.Length);
+        Assert.HasCount(size, readout);
         Assert.IsTrue(readouts.SequenceEqual(datas));
     }
 
-    [DataTestMethod]
+    [TestMethod]
     [DataRow(128 * 1024, 8 * 1024, _bufferStandard)]
     [DataRow(128 * 1024, 16 * 1024, _bufferStandard)]
     [DataRow(128 * 1024, 64 * 1024, _bufferStandard)]
@@ -663,16 +663,16 @@ public sealed class MemoryBufferTests
         using var buff = CreateMemoryBuffer<int>(type, segment);
         buff.Write(datas);
 
-        Assert.IsTrue(buff.Capacity >= (ulong)size);
+        Assert.IsGreaterThanOrEqualTo((ulong)size, buff.Capacity);
         Assert.AreEqual((ulong)size, buff.Count);
 
         var readout = buff.ToArray();
         var readouts = readout.AsSpan();
-        Assert.AreEqual(size, readout.Length);
+        Assert.HasCount(size, readout);
         Assert.IsTrue(readouts.SequenceEqual(datas));
     }
 
-    [DataTestMethod]
+    [TestMethod]
     [DataRow(128 * 1024, 8 * 1024, _bufferStandard)]
     [DataRow(128 * 1024, 16 * 1024, _bufferStandard)]
     [DataRow(128 * 1024, 64 * 1024, _bufferStandard)]
@@ -690,16 +690,16 @@ public sealed class MemoryBufferTests
         using var buff = CreateMemoryBuffer<long>(type, segment);
         buff.Write(datas);
 
-        Assert.IsTrue(buff.Capacity >= (ulong)size);
+        Assert.IsGreaterThanOrEqualTo((ulong)size, buff.Capacity);
         Assert.AreEqual((ulong)size, buff.Count);
 
         var readout = buff.ToArray();
         var readouts = readout.AsSpan();
-        Assert.AreEqual(size, readout.Length);
+        Assert.HasCount(size, readout);
         Assert.IsTrue(readouts.SequenceEqual(datas));
     }
 
-    [DataTestMethod]
+    [TestMethod]
     [DataRow(128 * 1024, 8 * 1024, _bufferStandard)]
     [DataRow(128 * 1024, 16 * 1024, _bufferStandard)]
     [DataRow(128 * 1024, 64 * 1024, _bufferStandard)]
@@ -717,16 +717,16 @@ public sealed class MemoryBufferTests
         using var buff = CreateMemoryBuffer<ComplexType>(type, segment);
         buff.Write(datas);
 
-        Assert.IsTrue(buff.Capacity >= (ulong)size);
+        Assert.IsGreaterThanOrEqualTo((ulong)size, buff.Capacity);
         Assert.AreEqual((ulong)size, buff.Count);
 
         var readout = buff.ToArray();
         var readouts = readout.AsSpan();
-        Assert.AreEqual(size, readout.Length);
+        Assert.HasCount(size, readout);
         Assert.IsTrue(readouts.SequenceEqual(datas));
     }
 
-    [DataTestMethod]
+    [TestMethod]
     [DataRow(128 * 1024, 8 * 1024, _bufferStandard)]
     [DataRow(128 * 1024, 16 * 1024, _bufferStandard)]
     [DataRow(128 * 1024, 64 * 1024, _bufferStandard)]
@@ -744,7 +744,7 @@ public sealed class MemoryBufferTests
         using var buff = CreateMemoryBuffer<ComplexType>(type, segment);
         buff.Write(datas);
 
-        Assert.IsTrue(buff.Capacity >= (ulong)size);
+        Assert.IsGreaterThanOrEqualTo((ulong)size, buff.Capacity);
         Assert.AreEqual((ulong)size, buff.Count);
 
         var readout = new ComplexType[size];
@@ -762,7 +762,7 @@ public sealed class MemoryBufferTests
         Assert.IsTrue(readouts.SequenceEqual(datas));
     }
 
-    [DataTestMethod]
+    [TestMethod]
     [DataRow(128 * 1024, 8 * 1024, _bufferStandard)]
     [DataRow(128 * 1024, 16 * 1024, _bufferStandard)]
     [DataRow(128 * 1024, 64 * 1024, _bufferStandard)]
@@ -780,7 +780,7 @@ public sealed class MemoryBufferTests
         using var buff = CreateMemoryBuffer<ComplexType>(type, segment);
         buff.Write(datas);
 
-        Assert.IsTrue(buff.Capacity >= (ulong)size);
+        Assert.IsGreaterThanOrEqualTo((ulong)size, buff.Capacity);
         Assert.AreEqual((ulong)size, buff.Count);
 
         var readout = new byte[size * Unsafe.SizeOf<ComplexType>()];
@@ -798,7 +798,7 @@ public sealed class MemoryBufferTests
         Assert.IsTrue(readouts.SequenceEqual(MemoryMarshal.AsBytes(datas)));
     }
 
-    [DataTestMethod]
+    [TestMethod]
     [DataRow(128 * 1024, 8 * 1024, _bufferStandard)]
     [DataRow(128 * 1024, 16 * 1024, _bufferStandard)]
     [DataRow(128 * 1024, 64 * 1024, _bufferStandard)]
@@ -816,7 +816,7 @@ public sealed class MemoryBufferTests
         using var buff = CreateMemoryBuffer<byte>(type, segment);
         buff.Write(datas);
 
-        Assert.IsTrue(buff.Capacity >= (ulong)size);
+        Assert.IsGreaterThanOrEqualTo((ulong)size, buff.Capacity);
         Assert.AreEqual((ulong)size, buff.Count);
 
         var readout = new byte[size];
@@ -834,7 +834,7 @@ public sealed class MemoryBufferTests
         Assert.IsTrue(readouts.SequenceEqual(datas));
     }
 
-    [DataTestMethod]
+    [TestMethod]
     [DataRow(128 * 1024, 8 * 1024)]
     [DataRow(128 * 1024, 16 * 1024)]
     [DataRow(128 * 1024, 64 * 1024)]
@@ -848,7 +848,7 @@ public sealed class MemoryBufferTests
         using var buff = CreateMemoryBuffer<ComplexType>(_bufferContinuous, segment) as ContinuousMemoryBuffer<ComplexType>;
         buff.Write(datas);
 
-        Assert.IsTrue(buff.Capacity >= (ulong)size);
+        Assert.IsGreaterThanOrEqualTo((ulong)size, buff.Capacity);
         Assert.AreEqual((ulong)size, buff.Count);
 
         var typedReadout = buff.Span;
@@ -857,7 +857,7 @@ public sealed class MemoryBufferTests
         Assert.AreEqual((ulong)rawReadout.Length, buff.Length);
     }
 
-    [DataTestMethod]
+    [TestMethod]
     [DataRow(128 * 1024, 8 * 1024, 4 * 1024, _bufferStandard)]
     [DataRow(128 * 1024, 8 * 1024, 6 * 1024, _bufferStandard)]
     [DataRow(128 * 1024, 8 * 1024, 8 * 1024, _bufferStandard)]
@@ -901,16 +901,16 @@ public sealed class MemoryBufferTests
             buff.Advance(actual);
         }
 
-        Assert.IsTrue(buff.Capacity >= (ulong)size);
+        Assert.IsGreaterThanOrEqualTo((ulong)size, buff.Capacity);
         Assert.AreEqual((ulong)size, buff.Count);
 
         var readout = buff.ToArray();
         var readouts = readout.AsSpan();
-        Assert.AreEqual(size, readout.Length);
+        Assert.HasCount(size, readout);
         Assert.IsTrue(readouts.SequenceEqual(datas));
     }
 
-    [DataTestMethod]
+    [TestMethod]
     [DataRow(128 * 1024, 8 * 1024, 4 * 1024, _bufferStandard)]
     [DataRow(128 * 1024, 8 * 1024, 6 * 1024, _bufferStandard)]
     [DataRow(128 * 1024, 8 * 1024, 8 * 1024, _bufferStandard)]
@@ -954,16 +954,16 @@ public sealed class MemoryBufferTests
             buff.Advance(actual);
         }
 
-        Assert.IsTrue(buff.Capacity >= (ulong)size);
+        Assert.IsGreaterThanOrEqualTo((ulong)size, buff.Capacity);
         Assert.AreEqual((ulong)size, buff.Count);
 
         var readout = buff.ToArray();
         var readouts = readout.AsSpan();
-        Assert.AreEqual(size, readout.Length);
+        Assert.HasCount(size, readout);
         Assert.IsTrue(readouts.SequenceEqual(datas));
     }
 
-    [DataTestMethod]
+    [TestMethod]
     [DataRow(128 * 1024, 8 * 1024, 4 * 1024, _bufferStandard)]
     [DataRow(128 * 1024, 8 * 1024, 6 * 1024, _bufferStandard)]
     [DataRow(128 * 1024, 8 * 1024, 8 * 1024, _bufferStandard)]
@@ -1007,16 +1007,16 @@ public sealed class MemoryBufferTests
             buff.Advance(actual);
         }
 
-        Assert.IsTrue(buff.Capacity >= (ulong)size);
+        Assert.IsGreaterThanOrEqualTo((ulong)size, buff.Capacity);
         Assert.AreEqual((ulong)size, buff.Count);
 
         var readout = buff.ToArray();
         var readouts = readout.AsSpan();
-        Assert.AreEqual(size, readout.Length);
+        Assert.HasCount(size, readout);
         Assert.IsTrue(readouts.SequenceEqual(datas));
     }
 
-    [DataTestMethod]
+    [TestMethod]
     [DataRow(128 * 1024, 8 * 1024, 4 * 1024, _bufferStandard)]
     [DataRow(128 * 1024, 8 * 1024, 6 * 1024, _bufferStandard)]
     [DataRow(128 * 1024, 8 * 1024, 8 * 1024, _bufferStandard)]
@@ -1060,16 +1060,16 @@ public sealed class MemoryBufferTests
             buff.Advance(actual);
         }
 
-        Assert.IsTrue(buff.Capacity >= (ulong)size);
+        Assert.IsGreaterThanOrEqualTo((ulong)size, buff.Capacity);
         Assert.AreEqual((ulong)size, buff.Count);
 
         var readout = buff.ToArray();
         var readouts = readout.AsSpan();
-        Assert.AreEqual(size, readout.Length);
+        Assert.HasCount(size, readout);
         Assert.IsTrue(readouts.SequenceEqual(datas));
     }
 
-    [DataTestMethod]
+    [TestMethod]
     [DataRow(128 * 1024, 8 * 1024, 4 * 1024, _bufferStandard)]
     [DataRow(128 * 1024, 8 * 1024, 6 * 1024, _bufferStandard)]
     [DataRow(128 * 1024, 8 * 1024, 8 * 1024, _bufferStandard)]
@@ -1124,12 +1124,12 @@ public sealed class MemoryBufferTests
             ++counter;
         }
 
-        Assert.IsTrue(buff.Capacity >= (ulong)size);
+        Assert.IsGreaterThanOrEqualTo((ulong)size, buff.Capacity);
         Assert.AreEqual((ulong)size, buff.Count);
 
         var readout = buff.ToArray();
         var readouts = readout.AsSpan();
-        Assert.AreEqual(size, readout.Length);
+        Assert.HasCount(size, readout);
         Assert.IsTrue(readouts.SequenceEqual(datas));
     }
 

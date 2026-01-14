@@ -47,7 +47,7 @@ public class AsyncExecutor
 
         // check for and rethrow any exceptions
         if (taskState.Exception is not null)
-            ThrowHelper.Instance(taskState.Exception);
+            ThrowHelper.Instance(taskState.Exception, keepStackTrace: !taskState.IsSyntheticException);
 
         // completion method
         static void TaskCompletionHandler(Task t, object state)
@@ -58,12 +58,14 @@ public class AsyncExecutor
             // retrieve any exceptions or cancellation status
             if (t.IsFaulted)
             {
+                stateRef.IsSyntheticException = false;
                 stateRef.Exception = t.Exception.InnerExceptions.Count == 1
                     ? t.Exception.InnerException
                     : t.Exception;
             }
             else if (t.IsCanceled)
             {
+                stateRef.IsSyntheticException = true;
                 stateRef.Exception = new TaskCanceledException(t);
             }
 
@@ -89,14 +91,14 @@ public class AsyncExecutor
 
         // check for and rethrow any exceptions
         if (taskState.Exception is not null)
-            ThrowHelper.Instance(taskState.Exception);
+            ThrowHelper.Instance(taskState.Exception, keepStackTrace: !taskState.IsSyntheticException);
 
         // return the result, if any
         if (taskState.HasResult)
             return taskState.Result;
 
         // throw exception if no result
-        ThrowHelper.Instance(new TaskStateException(task, "Task returned no result."));
+        ThrowHelper.Instance(new TaskStateException(task, "Task returned no result."), keepStackTrace: false);
         return default;
 
         // completion method
@@ -108,12 +110,14 @@ public class AsyncExecutor
             // retrieve any exceptions or cancellation status
             if (t.IsFaulted)
             {
+                stateRef.IsSyntheticException = false;
                 stateRef.Exception = t.Exception.InnerExceptions.Count == 1
                     ? t.Exception.InnerException
                     : t.Exception;
             }
             else if (t.IsCanceled)
             {
+                stateRef.IsSyntheticException = true;
                 stateRef.Exception = new TaskCanceledException(t);
             }
 
@@ -140,6 +144,11 @@ public class AsyncExecutor
         /// Gets the exception that occured during task's execution, if any.
         /// </summary>
         public Exception Exception { get; set; }
+
+        /// <summary>
+        /// Gets whether the exception is synthetic (created by the wrapper). This controls whether stack traces are preserved.
+        /// </summary>
+        public bool IsSyntheticException { get; set; }
 
         /// <summary>
         /// Gets the result returned by the task.
